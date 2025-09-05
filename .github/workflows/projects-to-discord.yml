@@ -1,0 +1,29 @@
+name: Projects v2 → Discord
+
+on:
+  projects_v2_item:
+    types: [created, edited, moved, deleted]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and send Discord message
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}   # store your webhook URL as a secret
+          ACTION: ${{ github.event.action }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ toJson(github.event) }}
+        run: |
+          title=$(echo "$EVENT" | jq -r '.projects_v2_item?.title // .projects_v2_item?.content?.title // "Projects v2 item"')
+          proj=$(echo "$EVENT"  | jq -r '.project?.title // "Project"')
+          url=$(echo "$EVENT"   | jq -r '.projects_v2_item?.content?.html_url // empty')
+
+          msg="📌 **$proj** (${ACTION})
+Repo: \`$REPO\`
+Title: $title"
+          [ -n "$url" ] && msg="$msg
+🔗 $url"
+
+          payload=$(jq -n --arg c "$msg" '{content:$c}')
+          curl -sS -H 'Content-Type: application/json' -X POST -d "$payload" "$DISCORD_WEBHOOK"
