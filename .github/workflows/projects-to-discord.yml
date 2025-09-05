@@ -1,6 +1,7 @@
-name: Projects v2 → Discord
+name: Projects v2 to Discord
 
 on:
+  workflow_dispatch: {}     # lets you test from the Actions tab
   projects_v2_item:
     types: [created, edited, moved, deleted]
 
@@ -8,22 +9,30 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Build and send Discord message
+      - name: Post Projects v2 event to Discord
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}   # store your webhook URL as a secret
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}   # NO /github at the end
           ACTION: ${{ github.event.action }}
           REPO: ${{ github.repository }}
           EVENT: ${{ toJson(github.event) }}
         run: |
-          title=$(echo "$EVENT" | jq -r '.projects_v2_item?.title // .projects_v2_item?.content?.title // "Projects v2 item"')
-          proj=$(echo "$EVENT"  | jq -r '.project?.title // "Project"')
-          url=$(echo "$EVENT"   | jq -r '.projects_v2_item?.content?.html_url // empty')
+          set -euo pipefail
 
-          msg="📌 **$proj** (${ACTION})
-Repo: \`$REPO\`
-Title: $title"
-          [ -n "$url" ] && msg="$msg
-🔗 $url"
+          # Extract safe fields from the Projects v2 payload
+          title=$(printf %s "$EVENT" | jq -r '.projects_v2_item?.title // .projects_v2_item?.content?.title // "Projects v2 item"')
+          proj=$(printf %s "$EVENT"  | jq -r '.project?.title // .projects_v2_project?.title // "Project"')
+          url=$(printf %s "$EVENT"   | jq -r '.projects_v2_item?.content?.html_url // empty')
 
-          payload=$(jq -n --arg c "$msg" '{content:$c}')
-          curl -sS -H 'Content-Type: application/json' -X POST -d "$payload" "$DISCORD_WEBHOOK"
+          # Build message without fancy emoji or backticks (keeps YAML happy)
+          msg="Project: ${proj} • ${ACTION}
+Repo: ${REPO}
+Title: ${title}"
+          if [ -n "$url" ]; then
+            msg="${msg}
+${url}"
+          fi
+
+          # Send to Discord
+          jq -n --arg c "$msg" '{content:$c}' > payload.json
+          curl -sS -H 'Content-Type: application/json' -X POST \
+               -d @payload.json "$DISCORD_WEBHOOK"
