@@ -1,0 +1,6 @@
+@IMASS_HostAddress = http://localhost:5103
+
+GET {{IMASS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
