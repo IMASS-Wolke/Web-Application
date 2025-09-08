@@ -1,14 +1,95 @@
 .Login {
     text-align: center;
 }
-  
-.Login-header {
-    background-color: #282c34;
-    min-height: 100vh;
+
+.Login-container {
+    width: 350px;
+    height: 90vh;
+}
+
+.Login-email-header {
+    text-align: left;
+    font-size: 15px;
+    font-weight: 400;
+    margin-bottom: 5px;
+}
+
+.email {
+    width: 100%;
+    box-sizing: border-box;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
+    background: transparent;
+    border: 1px solid #545e70;
+    border-radius: 5px;
+    padding: 10px;
     color: white;
-}  
+}
+
+.Password-container {
+    margin-top: 15px;
+}
+
+.Login-password-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 400;
+    margin-bottom: 5px;
+}
+
+.Forgot-password-button {
+  background: none;
+  border: none;
+  color: #2275e3;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.password {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    background: transparent;
+    border: 1px solid #545e70;
+    border-radius: 5px;
+    padding: 10px;
+    color: white;
+}
+
+.Login-button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #238636;
+    border: #43af56 solid 1px;
+    color: white;
+    font-weight: 400;
+}
+
+.Login-divider {
+    max-height: 25px;
+    font-size: 15px;
+    display: flex;
+    justify-content: center;
+    vertical-align: center;
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.divider {
+    width: 100%;
+    background-color: #545e70;
+    height: 1px;
+}
+
+.or-text {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.Google-login {
+    background-color: #212830;
+}
