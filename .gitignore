@@ -419,3 +419,4 @@ FodyWeavers.xsd
 
 # Rider 
 *.idea
+backend/appsettings.json
