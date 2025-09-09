@@ -36,7 +36,7 @@ function Login() {
       localStorage.setItem("refreshToken", data.refreshToken);
 
       // Redirect or update UI
-      navigate("/");
+      navigate("/home");
     } catch (err) {
       setError(err.message);
     }
