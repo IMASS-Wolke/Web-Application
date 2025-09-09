@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IMASS.Models.DTOs;
 
-public class JobGetDto
+public class JobCreateDTO
 {
     [Required]
     public int Id {get; set;}
@@ -12,7 +12,7 @@ public class JobGetDto
     [Required]
     public int UserId {get; set;}
     [Required]
-    public int ModelId { get; set; }
+    public Model Model { get; set; }
     [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

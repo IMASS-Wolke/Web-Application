@@ -1,8 +1,8 @@
 namespace IMASS.Models.DTOs;
 
-public class JobUpdateDto
+public class JobUpdateDTO
 {
     public string Title {get; set;}
     public string Status {get; set;}
-    public int ModelId { get; set; }
+    public Model Model { get; set; }
 }

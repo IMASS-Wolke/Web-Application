@@ -9,7 +9,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Model = IMASS.Models.Model;
 
 namespace IMASS.Controllers;
 
@@ -17,33 +19,21 @@ namespace IMASS.Controllers;
 [ApiController]
 public class JobController: ControllerBase
 {
-    private readonly ApplicationDbContext context;
-    private readonly IMapper mapper;
-    private readonly ILogService _logService;
+    private readonly ApplicationDbContext _context;
 
     public JobController(ApplicationDbContext context)
     {
-        this.context = context;
-        this.mapper = mapper;
-        _logService = logService:
+        _context = context;
     }
     
     [HttpGet]
-    public async Task<ActionResult<Job>> GetAll()
+    public async Task<ActionResult<JobGetDTO>> GetAll()
     {
-        var job = await context.Job.AsNoTracking().OrderBy(x => x.id).ToListAsync();
-        
-        /*var entitiesFromDatabase = context.Set<Job>();*/
-    
-        /*var data = entitiesFromDatabase.Select(job => new JobGetDto
-        { 
-            Id = job.Id,
-            Title = job.Title,
-            Status = job.Status,
-            UserId = job.UserId,
-            ModelId = job.ModelId,
-            CreatedAt = job.CreatedAt
-        }).ToList();*/
+        var job = await _context.Jobs
+            .Include(x => x.Model)
+            .AsNoTracking()
+            .OrderBy(x => x.Id)
+            .ToListAsync();
 
         if (job is null)
         {
@@ -52,4 +42,22 @@ public class JobController: ControllerBase
         
         return Ok(job);
     }
+    [HttpPost]
+    public async Task<ActionResult<Job>> PostJob(JobCreateDTO jobCreateDto)
+    {
+        var job = new Job
+        {
+            Title = jobCreateDto.Title,
+            Status = jobCreateDto.Status,
+            UserId = jobCreateDto.UserId,
+            Model = jobCreateDto.Model,
+            CreatedAt = jobCreateDto.CreatedAt
+        };
+
+        _context.Jobs.Add(job);
+        await _context.SaveChangesAsync();
+
+        return Ok(job);
+    }
+    
 }

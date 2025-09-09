@@ -11,5 +11,7 @@ namespace IMASS.Data
             
         }
         public DbSet<TokenInfo> TokenInfo { get; set; }
+        public DbSet<Model> Models { get; set; }
+        public DbSet<Job> Jobs { get; set; }
     }
 }
