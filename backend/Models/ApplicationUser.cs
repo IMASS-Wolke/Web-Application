@@ -7,5 +7,7 @@ namespace IMASS.Models
         //This is where we are going to put any other data associated to the User that isnt already included in AspNetCore
         //Any added values will need a Migration to update the AspNetCoreUsers table
         public string Name { get; set; }
+        public string? GoogleSub { get; set; }  
+
     }
 }

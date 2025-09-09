@@ -11,5 +11,15 @@ namespace IMASS.Data
             
         }
         public DbSet<TokenInfo> TokenInfo { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+
+            builder.Entity<ApplicationUser>()
+                .HasIndex(u => u.GoogleSub)
+                .IsUnique(true); //enforces one user per Google account
+        }
     }
 }
