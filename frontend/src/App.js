@@ -1,5 +1,5 @@
 import './App.css';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 
 // import pages
 import Home from "./components/Home/Home.js";
@@ -11,7 +11,8 @@ function App() {
       <main className="App-body">
         {/* Declared Routes */}
         <Routes>
-          <Route path="/" element={ <Home /> } />
+          <Route path="/" element={ <Navigate to="/login"/> } />
+          <Route path="/home" element={ <Home />} />
           <Route path="/login" element={ <Login /> } />
           <Route path="*" element={ <h1>404 Error</h1> } />
         </Routes>
