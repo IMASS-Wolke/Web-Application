@@ -7,6 +7,34 @@
     height: 90vh;
 }
 
+.Login-error {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    background: rgba(248, 81, 73, 0.15);
+    border: 1px solid #f85149;
+    border-radius: 5px;
+    padding: 10px;
+    color: white;
+    font-size: 15px;
+    font-weight: 400;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.Close-error {
+    background-color: transparent;
+    border-style: none;
+    color: #f85149;
+    font-size: 15px;
+}
+
+.Close-error:hover {
+    cursor: pointer;
+    color: #b9403c;
+}
+
 .Login-email-header {
     text-align: left;
     font-size: 15px;
@@ -66,6 +94,11 @@
     border: #43af56 solid 1px;
     color: white;
     font-weight: 400;
+}
+
+.Login-button:hover {
+    background-color: #29903b;
+    cursor: pointer;
 }
 
 .Login-divider {
