@@ -2,7 +2,7 @@ import './Login.css';
 
 import { useState } from "react";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Login() {
 
@@ -92,6 +92,10 @@ function Login() {
             }} 
             onError={ () => console.log("Login failed") }
           />
+        </div>
+        <div>
+            <text className="Create-account-header">New here? </text>
+            <Link className="Create-account-button" to="/signup">Create an account</Link>
         </div>
       </div>
     </div>

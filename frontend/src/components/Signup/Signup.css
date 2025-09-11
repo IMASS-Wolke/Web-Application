@@ -1,0 +1,85 @@
+.Signup {
+    text-align: center;
+}
+
+.Signup-container {
+    width: 350px;
+    height: 90vh;
+}
+
+.Signup-error {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    background: rgba(248, 81, 73, 0.15);
+    border: 1px solid #f85149;
+    border-radius: 5px;
+    padding: 10px;
+    color: white;
+    font-size: 15px;
+    font-weight: 400;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.Close-error {
+    background-color: transparent;
+    border-style: none;
+    color: #f85149;
+    font-size: 15px;
+}
+
+.Close-error:hover {
+    cursor: pointer;
+    color: #b9403c;
+}
+
+.Signup-field {
+    margin-top: 15px;
+}
+
+.Signup-header {
+    text-align: left;
+    font-size: 15px;
+    font-weight: 400;
+    margin-bottom: 5px;
+}
+
+.Signup-input {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    background: transparent;
+    border: 1px solid #545e70;
+    border-radius: 5px;
+    padding: 10px;
+    color: white;
+}
+
+.Signup-button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #238636;
+    border: #43af56 solid 1px;
+    color: white;
+    font-weight: 400;
+}
+
+.Signup-button:hover {
+    background-color: #29903b;
+    cursor: pointer;
+}
+
+.Login-account-header {
+    color: white;
+    font-size: 15px;
+}
+
+.Login-account-button {
+    font-size: 15px;
+    color: #2275e3;
+    text-decoration: none;
+}
