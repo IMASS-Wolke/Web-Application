@@ -1,6 +1,6 @@
 import './Signup.css';
 import { use, useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 function Signup() {
     
@@ -40,56 +40,67 @@ function Signup() {
     };
 
     return (
-        <div className="Signup">
-      <div className="Signup-container">
-        <form className="Signup-info" onSubmit={handleSubmit}>
-          <div className="Signup-field">
-            <label>Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="Signup-field">
-            <label>Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="Signup-field">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="Signup-error">
-              {error}
-              <button
-                type="button"
-                className="close-btn"
-                onClick={() => setError("")}
-              >
-                X
-              </button>
+      <div className="Signup">
+        <div className="Signup-container">
+          <form className="Signup-info" onSubmit={handleSubmit}>
+            {error && (
+              <div className="Signup-error">
+                {error}
+                <button
+                  className="Close-error"
+                  type="button"
+                  onClick={() => setError("")}
+                >
+                  X
+                </button>
+              </div>
+            )}
+            <div className="Signup-field">
+              <div className="Signup-header">
+                <label>Name</label>
+              </div>
+              <input
+                className="Signup-input"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
             </div>
-          )}
-
-          <button className="Signup-button" type="submit">
-            Sign Up
-          </button>
-        </form>
+            <div className="Signup-field">
+              <div className="Signup-header">
+                <label>Email</label>
+              </div>
+              <input
+                className="Signup-input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="Signup-field">
+              <div className="Signup-header">
+                <label>Password</label>
+              </div>
+              <input
+                className="Signup-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button className="Signup-button" type="submit">
+              Sign Up
+            </button>
+          </form>
+          <div>
+            <text className="Login-account-header">Already have an account? </text>
+            <Link className="Login-account-button" to="/login">Login</Link>
+          </div>
+        </div>
       </div>
-    </div>
     );
 }
 

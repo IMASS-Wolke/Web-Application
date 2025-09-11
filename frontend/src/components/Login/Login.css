@@ -126,3 +126,14 @@
 .Google-login {
     background-color: #212830;
 }
+
+.Create-account-header {
+    color: white;
+    font-size: 15px;
+}
+
+.Create-account-button {
+    font-size: 15px;
+    color: #2275e3;
+    text-decoration: none;
+}
