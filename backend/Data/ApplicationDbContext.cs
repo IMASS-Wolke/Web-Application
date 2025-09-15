@@ -11,6 +11,8 @@ namespace IMASS.Data
             
         }
         public DbSet<TokenInfo> TokenInfo { get; set; }
+        public DbSet<Job> Jobs { get; set; }
+        public DbSet<Model> Models { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -20,6 +22,11 @@ namespace IMASS.Data
             builder.Entity<ApplicationUser>()
                 .HasIndex(u => u.GoogleSub)
                 .IsUnique(true); //enforces one user per Google account
+
+            builder.Entity<Model>()
+                .HasMany(m => m.Jobs)
+                .WithMany(j => j.Models)
+                .UsingEntity(jm => jm.ToTable("JobModels")); //Name of the join table
         }
     }
 }
