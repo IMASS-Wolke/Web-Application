@@ -13,6 +13,7 @@ namespace IMASS.Data
         public DbSet<TokenInfo> TokenInfo { get; set; }
         public DbSet<Job> Jobs { get; set; }
         public DbSet<Model> Models { get; set; }
+        public DbSet<ModelInstance> ModelInstances { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -27,6 +28,12 @@ namespace IMASS.Data
                 .HasMany(m => m.Jobs)
                 .WithMany(j => j.Models)
                 .UsingEntity(jm => jm.ToTable("JobModels")); //Name of the join table
+
+            builder.Entity<ModelInstance>()
+                .Property(x => x.InputJson).HasColumnType("jsonb");
+
+            builder.Entity<ModelInstance>()
+                .Property(x => x.OutputJson).HasColumnType("jsonb");
         }
     }
 }
