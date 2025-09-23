@@ -1,4 +1,6 @@
 import './Signup.css';
+import logo from "../../assets/images/IMASS-logo.png";
+
 import { use, useState } from "react";
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -42,6 +44,7 @@ function Signup() {
     return (
       <div className="Signup">
         <div className="Signup-container">
+          <img src={logo} alt="IMASS Logo" />
           <form className="Signup-info" onSubmit={handleSubmit}>
             {error && (
               <div className="Signup-error">
