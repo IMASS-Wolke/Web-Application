@@ -18,6 +18,7 @@ namespace IMASS.Models
 
         //Skip Navigation property 
         public List<Model> Models { get; set; }
+        public List<ModelInstance> ModelInstances { get; set; }
 
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace IMASS.Models
+﻿using System.Text.Json;
+
+namespace IMASS.Models
 {
     //Enum for Status tracking. Serve as constant values. 0=Pending, 1=Running, 2=Completed, 3=Failed
     public enum RunStatus { Pending, Running, Completed, Failed } 
@@ -14,8 +16,8 @@
         public RunStatus Status { get; set; } //lets us track the status of the model run
 
 
-        public string InputJson { get; set; } //JSON schema for input parameters
-        public string? OutputJson { get; set; } //JSON schema for output parameters
+        public JsonDocument InputJson { get; set; } //JSON schema for input parameters
+        public JsonDocument? OutputJson { get; set; } //JSON schema for output parameters
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? StartedAt { get; set; }
