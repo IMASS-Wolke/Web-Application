@@ -1,4 +1,5 @@
 import './Login.css';
+import logo from "../../assets/images/IMASS-logo.png";
 
 import { useState } from "react";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
@@ -46,6 +47,7 @@ function Login() {
     <div className="Login">
 
       <div className="Login-container">
+        <img src={logo} alt="IMASS Logo" />
         <form className="Login-info" onSubmit={ handleSubmit }>
           {error && <div className="Login-error">
             <span>{error}</span>
