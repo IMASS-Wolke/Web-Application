@@ -226,7 +226,7 @@ namespace IMASS.Controllers
                 if (string.IsNullOrWhiteSpace(model.IdToken))
                     return BadRequest("Missing id_token.");
 
-                // 1) Validate Google ID token (audience must match your OAuth client id)
+                //make sure audience matches our client Id
                 GoogleJsonWebSignature.Payload payload;
                 try
                 {
@@ -260,7 +260,7 @@ namespace IMASS.Controllers
                 }
                 var googleSub = payload.Subject;
 
-                ApplicationUser? user = null; // This changes what the program is searching for to find the user
+                ApplicationUser? user = null; //This changes what the program is searching for to find the user
 
                 if (!string.IsNullOrWhiteSpace(googleSub))
                 {
@@ -272,7 +272,7 @@ namespace IMASS.Controllers
                 }
                 if (user == null)
                 {
-                    // Ensure default role exists
+                    //Ensure role exists
                     if (!await _roleManager.RoleExistsAsync(Roles.User))
                     {
                         var roleCreate = await _roleManager.CreateAsync(new IdentityRole(Roles.User));
@@ -348,7 +348,7 @@ namespace IMASS.Controllers
                     authClaims.Add(new Claim(ClaimTypes.Role, role));
                 }
 
-                // 4) Issue tokens
+                //Issue tokens
                 var accessToken = _tokenService.GenerateAccessToken(authClaims);
                 var refreshToken = _tokenService.GenerateRefreshToken();
 
