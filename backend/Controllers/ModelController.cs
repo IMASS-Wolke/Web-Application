@@ -12,7 +12,7 @@ namespace IMASS.Controllers
     [ApiController]
     public class ModelController : ControllerBase
     {
-        public readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
         public ModelController(ApplicationDbContext context)
         {
@@ -25,9 +25,9 @@ namespace IMASS.Controllers
                 .Include(j => j.Jobs)
                 .Select(x => new
                 {
-                    ModelId = x.ModelId,
-                    Name = x.Name,
-                    Status = x.Status,
+                    x.ModelId,
+                    x.Name,
+                    x.Status,
                     Jobs = x.Jobs.Select(j => new JobGetDTO
                     {
                         JobId = j.JobId,

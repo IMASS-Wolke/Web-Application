@@ -1,4 +1,4 @@
-﻿namespace IMASS.Models
+﻿namespace IMASS.Models.FAAST_INPUTS
 {
     public class FaastInputDTO
     {
