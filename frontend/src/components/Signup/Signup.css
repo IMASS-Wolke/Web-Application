@@ -7,6 +7,22 @@
     height: 90vh;
 }
 
+.Signup-title-container {
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.Signup-logo {
+    width: 100px;
+}
+
+.Signup-title {
+    margin-left: 15px;
+    font-size: 50px;
+}
+
 .Signup-error {
     width: 100%;
     box-sizing: border-box;

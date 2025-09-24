@@ -7,6 +7,22 @@
     height: 90vh;
 }
 
+.Login-title-container {
+    justify-content: center;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.Login-logo {
+    width: 100px;
+}
+
+.Login-title {
+    margin-left: 15px;
+    font-size: 50px;
+}
+
 .Login-error {
     width: 100%;
     box-sizing: border-box;
