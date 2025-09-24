@@ -9,7 +9,10 @@ function Faast() {
         e.preventDefault();
 
         try {
-            const response = await fetch("http://localhost:5103/api/faastinputs", {
+            const jobId = 123; // Hardcode ID's until further notice
+            const modelId = 321; // Hardcode ID's until further notice
+
+            const response = await fetch("http://localhost:5103/api/Job/${jobId}/models/${modelId}/faast", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
