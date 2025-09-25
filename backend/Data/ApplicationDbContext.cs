@@ -24,6 +24,15 @@ namespace IMASS.Data
                 .HasIndex(u => u.GoogleSub)
                 .IsUnique(true); //enforces one user per Google account
 
+            builder.Entity<Job>()
+                .HasOne(x => x.User)
+                .WithMany(j => j.Jobs)
+                .HasForeignKey(x => x.UserId)
+                .IsRequired();
+
+            builder.Entity<Job>()
+                .HasIndex(x => x.UserId);
+
             builder.Entity<Model>()
                 .HasMany(m => m.Jobs)
                 .WithMany(j => j.Models)

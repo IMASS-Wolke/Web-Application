@@ -111,6 +111,7 @@ namespace IMASS.Controllers
                     return BadRequest("Invalid Username or Password");
                 }
                 List<Claim> authClaims = [
+                    new (ClaimTypes.NameIdentifier, user.Id),
                     new (ClaimTypes.Name, user.UserName),
                     new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     //unique id for token

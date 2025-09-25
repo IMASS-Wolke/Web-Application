@@ -10,6 +10,8 @@ using System.IO;
 using System.Net;
 using IMASS.Models.SMTHERM_INPUTS;
 using IMASS.Models.FAAST_INPUTS;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace IMASS.Controllers
 {
@@ -23,15 +25,22 @@ namespace IMASS.Controllers
         {
             _context = context;
         }
-
+        //Authed User can get all their owned Jobs, assigned Models, and ModelInstances (gives long output)
         [HttpGet]
         public async Task<IActionResult> GetJobs()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
             var jobs = await _context.Jobs
+                .Where(x => x.UserId == userId)
                 .Include(x => x.Models)
                 .Select(x => new
                 {
                     x.JobId,
+                    x.UserId,
                     x.Title,
                     Models = x.Models.Select(m => new ModelGetDTO
                     {
@@ -39,7 +48,7 @@ namespace IMASS.Controllers
                         Name = m.Name,
                         Status = m.Status,
                     }).ToList(),
-                    ModelInstances = x.ModelInstances.Select(mi => new ModelInstance
+                    ModelInstances = x.ModelInstances.Select(mi => new ModelInstanceGetDTO
                     {
                         ModelInstanceId = mi.ModelInstanceId,
                         JobId = mi.JobId,
@@ -48,8 +57,6 @@ namespace IMASS.Controllers
                         InputJson = mi.InputJson,
                         OutputJson = mi.OutputJson,
                         CreatedAt = mi.CreatedAt,
-                        StartedAt = mi.StartedAt,
-                        FinishedAt = mi.FinishedAt
                     }).ToList(),
 
                 })
@@ -57,12 +64,19 @@ namespace IMASS.Controllers
 
             return Ok(jobs);
         }
+        
+        //Authed User can get all ModelInstances underneath a specific Job (not specific to Model)
         [HttpGet("{jobId:int}/modelInstances")]
         public async Task<IActionResult> GetModelInstancesForJob(int jobId)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
             var job = await _context.Jobs
                 .Include(j => j.ModelInstances)
-                .FirstOrDefaultAsync(j => j.JobId == jobId);
+                .FirstOrDefaultAsync(j => j.JobId == jobId && j.UserId == userId);
             if (job == null)
             {
                 return NotFound(new { Message = "Job not found." });
@@ -81,11 +95,16 @@ namespace IMASS.Controllers
             }).ToList();
             return Ok(modelInstances);
         }
-
+        //Authed User can get all ModelInstances for a specific Model assigned to their own Job
         [HttpGet("{jobId:int}/models/{modelId:int}")]
         public async Task<IActionResult> GetModelInstances(int jobId, int modelId)
         {
-            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
+            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId && j.UserId == userId);
             if (job == null)
             {
                 return NotFound(new { Message = "Job not found." });
@@ -104,7 +123,7 @@ namespace IMASS.Controllers
                 .Select(mi => new
                 {
                     mi.ModelInstanceId,
-                    mi.Status, //must fix here to show enum instea of null 
+                    mi.Status,
                     mi.InputJson,
                     mi.OutputJson,
                     mi.CreatedAt,
@@ -114,24 +133,36 @@ namespace IMASS.Controllers
                 .ToListAsync();
             return Ok(modelInstances);
         }
-
+        //Initial Job Creation for Authed User
         [HttpPost]
         public async Task<IActionResult> CreateModel([FromBody] JobCreateDTO dto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
+
             var job = new Job
             {
                 Title = dto.Title,
+                UserId = userId,
                 Models = new List<Model>()
             };
             _context.Jobs.Add(job);
             await _context.SaveChangesAsync();
             return Ok(new { Message = "Job created successfully.", job.JobId });
         }
-
+        //Authed User can choose which Models to assign to their own Job
         [HttpPost("{jobId}/assign-model/{modelId}")]
         public async Task<IActionResult> AssignModelToJob(int jobId, int modelId)
         {
-            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
+            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId && j.UserId == userId);
             if (job == null)
             {
                 return NotFound(new { Message = "Job not found." });
@@ -148,11 +179,16 @@ namespace IMASS.Controllers
             }
             return Ok(new { Message = "Model assigned to Job successfully." });
         }
-        
+        //Authed User can create a Faast ModelInstance for their own Job and assigned Model
         [HttpPost("{jobId:int}/models/{modelId:int}/faast")]
         public async Task<IActionResult> CreateFaastRun(int jobId, int modelId, [FromBody] FaastInputDTO inputDto)
         {
-            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
+            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId && j.UserId == userId);
             if (job == null)
             {
                 return NotFound(new { Message = "Job not found." });
@@ -181,11 +217,16 @@ namespace IMASS.Controllers
             return Ok(new { Message = "Faast run created successfully.", modelInstanceId = modelInstance.ModelInstanceId });
             //Write CSV file then execute Model here (not implemented yet)
         }
-
+        //Authed User can create a Sntherm LayerIN ModelInstance for their own Job and assigned Model
         [HttpPost("{jobId:int}/models/{modelId:int}/sntherm/layerIN")]
         public async Task<IActionResult> CreateSnthermRun(int jobId, int modelId, [FromBody] LayerINDTO inputDto)
         {
-            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
+            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId && j.UserId == userId);
             if (job == null)
             {
                 return NotFound(new { Message = "Job not found." });
@@ -205,7 +246,7 @@ namespace IMASS.Controllers
                 ModelId = modelId,
                 Status = RunStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
-                InputJson = System.Text.Json.JsonSerializer.SerializeToDocument(inputDto),
+                InputJson = JsonSerializer.SerializeToDocument(inputDto),
                 OutputJson = null,
             };
             _context.Add(modelInstance);
@@ -236,7 +277,6 @@ namespace IMASS.Controllers
                 $"{inputDto.Max_Allowable_TimeStep__With_Waterflow_Present}, {inputDto.Max_Allowable_Change_In_Saturation_Per_TimeStep}," + 
                 $"{inputDto.Max_Allowable_Temp_Est_Error_Per_TimeStep}";
 
-            // write to runs/<id>/LAYER.IN
             var dir = $"sntherm/layerIN/runs/{modelInstance.ModelInstanceId}";
             Directory.CreateDirectory(dir);
             var path = Path.Combine(dir, "LAYER.IN");
@@ -245,10 +285,16 @@ namespace IMASS.Controllers
             return Ok(new { Message = "Sntherm run created successfully.", modelInstanceId = modelInstance.ModelInstanceId });
 
         }
+        //Authed User can create a Sntherm MetIN ModelInstance for their own Job and assigned Model
         [HttpPost("{jobId:int}/models/{modelId:int}/sntherm/metIN")]
         public async Task<IActionResult> CreateSnthermMetIN(int jobId, int modelId, [FromBody] MetINDTO inputDto)
         {
-            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
+            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId && j.UserId == userId);
             if (job == null)
             {
                 return NotFound(new { Message = "Job not found." });
@@ -290,13 +336,16 @@ namespace IMASS.Controllers
             return Ok(new { Message = "Sntherm MetIN run created successfully.", modelInstanceId = modelInstance.ModelInstanceId });
         }
 
-
-
-
+        //Authed User can delete their own Job and all associated ModelInstances
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int jobId)
         {
-            var jobToDelete = await _context.Jobs.FirstOrDefaultAsync(x => x.JobId == id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "User not authenticated." });
+            }
+            var jobToDelete = await _context.Jobs.FirstOrDefaultAsync(x => x.JobId == jobId && x.UserId == userId);
 
             if (jobToDelete == null)
             {
@@ -306,7 +355,7 @@ namespace IMASS.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { Message = "Job deleted successfully." });
         }
-
+        //Delete a specfic ModelInstance for a Job (Broad delete, no userId check)
         [HttpDelete("{jobId:int}/modelInstances/{modelInstanceId:int}")]
         public async Task<IActionResult> DeleteModelInstance(int jobId, int modelInstanceId)
         {
