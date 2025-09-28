@@ -14,8 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 //Connection to PostgresSql
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        n => n.SetPostgresVersion(9, 6)
+        builder.Configuration.GetConnectionString("DefaultConnection")
 
     ));
 
@@ -71,6 +70,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 
+// Add FASST API service
+builder.Services.AddHttpClient<IFasstApiService, FasstApiService>();
+builder.Services.AddScoped<IFasstApiService, FasstApiService>();
 
 builder.Services.AddControllers();
 
@@ -94,6 +96,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 //Seed Admin User if none exists (this comes directly from our DbSeeder class using the function)
-await DbSeeder.SeedDataAsync(app);
+//await DbSeeder.SeedDataAsync(app);
 
 app.Run();
