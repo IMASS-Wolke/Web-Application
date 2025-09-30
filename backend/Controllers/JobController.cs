@@ -8,8 +8,6 @@ using System.Text;
 using System.Text.Json;
 using System.IO;
 using System.Net;
-using IMASS.Models.SMTHERM_INPUTS;
-using IMASS.Models.FAAST_INPUTS;
 
 namespace IMASS.Controllers
 {
