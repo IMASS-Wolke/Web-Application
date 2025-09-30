@@ -34,10 +34,12 @@ namespace IMASS
             var args = new List<string>
             {
                 "run",
-                "--rm",
                 "-v",
                 $"{workDir}:/work",
-                dockerImage
+                dockerImage,
+                "tail",
+                "-f",
+                "/dev/null" //keeps the container running until we manually stop it
             };
             //Here is where we use var args to combine all the commands to make the cmd docker run --rm -v {workDir}:/work {dockerImage}
             //HINTS the fileName in PSI is "docker"
@@ -102,7 +104,7 @@ namespace IMASS
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeout);
             //waits for both stdOut & stdErr to complete before exiting
-            await Task.WhenAll(stdOutTask, stdErrTask);
+            await Task.WhenAll(stdOutTask,stdErrTask);
             await p.WaitForExitAsync(cts.Token);
 
             return (p.ExitCode, stdOutTask.Result, stdErrTask.Result);
