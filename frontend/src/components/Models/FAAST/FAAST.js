@@ -1,4 +1,6 @@
 import { useState } from "react";
+import FaastOutput from "../../Outputs/faast-outputs";
+import "./FAAST.css";
 
 function Faast() {
     const [temperatureC, setTemperatureC] = useState("");
@@ -37,8 +39,12 @@ function Faast() {
     }
 
     return (
-    <div>
+    <div className="faast-container">
         <h1>FAAST</h1>
+        <div className="faast-graph">
+            <FaastOutput />
+        </div>
+        {/*}
         <form onSubmit={handleSubmit}>
             <div>
                 <label>Temperature (°C)</label>
@@ -62,7 +68,7 @@ function Faast() {
             </div>
             <button type="submit">Submit</button>
         </form>
-        {message && <p>{message}</p>}
+        {message && <p>{message}</p>}*/}
     </div>
 )
 };

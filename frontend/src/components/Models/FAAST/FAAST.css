@@ -1,0 +1,10 @@
+.faast-container {
+    width: 100%;
+}
+
+.faast-graph {
+    margin: auto;
+    justify-content: center;
+    display: flex;
+    width: 90%;
+}
