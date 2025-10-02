@@ -1,5 +1,4 @@
 ﻿using Google.Apis.Http;
-using IMASS.Models;
 using System.Diagnostics;
 
 namespace IMASS.SnthermModel
@@ -58,7 +57,7 @@ namespace IMASS.SnthermModel
                 "-f",
                 "/dev/null" //keeps the container running
             };
-            //
+            
             var execArgs = new List<string>
             {
                 "exec",
