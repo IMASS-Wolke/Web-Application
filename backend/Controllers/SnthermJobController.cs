@@ -1,5 +1,4 @@
-﻿using IMASS.Models;
-using IMASS.SnthermModel;
+﻿using IMASS.SnthermModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.IO.Compression;
@@ -38,7 +37,7 @@ namespace IMASS.Controllers
             var runsRoot = _config.GetValue<string>("Sntherm:RunsRoot") ?? Path.Combine(_env.ContentRootPath, "SnthermRuns");
             Directory.CreateDirectory(runsRoot);
 
-            var image = _config.GetValue<string>("SnthermDockerImage") ?? "sntherm-job:1.0.0";
+            var image = _config.GetValue<string>("Image") ?? "ethancxyz/sntherm-job:1.0.0";
 
             await using var s1 = req.TestIn.OpenReadStream();
             await using var s2 = req.MetSweIn.OpenReadStream();

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace IMASS.Models
+namespace IMASS.SnthermModel
 {
     public sealed class SnthermRunRequest
     {
