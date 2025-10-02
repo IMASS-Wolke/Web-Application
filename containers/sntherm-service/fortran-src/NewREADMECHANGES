@@ -1,0 +1,4 @@
+Keep posted for a discussion of substantial changes made to SNTHERM.89
+from Feb 26 through March 12, 2002.  This completes upgrades to SNTHERM.89
+for the time being.  Major changes include replacement of the getmet.f and
+qturb.f routines with more recent versions used in SNTHERM.99.

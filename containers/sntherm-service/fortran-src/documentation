@@ -1,0 +1,655 @@
+c***********************************************************************
+c DOCUMENTATION contains the internal documentation for SNTHERM.89
+c***********************************************************************
+c THIS DOCUMENTATION HAS NOT BEEN UPDATED FOR REV4
+c Complete technical documentation can be found in Jordan, R.,"A
+c One-Dimensional Temperature Model for a Snow Cover," USA-CRREL
+c Special Report 657, in press. DISCLAIMER: This documentation  
+c is incomplete and may contain errors.  No attempt has been made
+c to reconcile the nomenclature in the code with that in the 
+c Technical Report.  In some instances they agree, but in many 
+c there are minor inconsistancies in definition, so that care must 
+c be taken when comparing the equations in the Report with those
+c in the code.
+c**********
+c
+c Order of I/O file names
+c
+c  1: Initial profile information : General parameters,layer type and
+c         starting snowpack and soil temperatures and water density
+c         profiles.
+c  2: Met data : Hourly values
+c  3: Thermal couple data : Optional file of measured temperatures
+c  4: Output file name
+c  5: Flux output
+c  6: Filtration related info output
+c
+c**********
+c**********
+
+c  Alphabetized Nomenclature List
+c
+c
+c a(nd,3) : Coefficient array in linear equation matrix
+c a1(ld) : Constant in unfrozen water formula
+c a1snow : unfrozen water constant
+c a2(ld) : Constant in unfrozen water formula
+c a213(ld) : a2^^(1/3)
+c a223(ld) : a2^^(2/3)
+c a243(ld) : a2^^(4/3)
+c ak : Water flux=-ak*Effective saturation^^3
+c alb(ld) : Material-layer albedo
+c albo(ld) :  Old albedo for material-type layer
+c albsnow : snow albedo [.78].
+c array1: Common block array declared in INCLUDE segment ARRAYS
+c array2: Common block array declared in INCLUDE segment ARRAYS
+c array3: Common block array declared in INCLUDE segment ARRAYS
+c at : Air temperature.
+c azslope: azimuthal angle of slope (clockwise from north to falline)
+c azsolar: azimuthal angle of sun (clockwise from north)
+c b(nd) : Constant array in linear equation matrix
+c bb(nd) : .5*(Nodal conducted and convected heat plus absorbed solar)
+c bbo(nd) : .5*(Old nodal conducted and convected heat plus absorbed solar)
+c bbo2: Element of bbo(nd) used in COMBO
+c bd(ld) : Bulk density of dry soil material [kg/m^3]
+c bdcd(ld) : Dry soil bulk density*specific heat (bd*cd)
+c bdjp(ld) : 0.75*Dry soil bulk density*plasticity index (0.75*bd*djp)
+c bext : Snow solar extinction coefficient for near-IR
+c bi(nd) : Nodal bulk density of ice [kg/m^3]
+c bifall: Bulk density of newly fallen dry snow - 8d2 in MAIN 
+c         (0d2 if rainfall occurs)
+c bl(nd) : Nodal liquid water bulk density [kg/m^3]
+c blmax:  Bulk density of liquid water corresponding to upper melt
+c        zone limit [kg/m^3]
+c blmin:  Bulk density of liquid water corresponding to lower melt
+c        zone limit [kg/m^3]
+c blo(nd) : Old Bulk density of liquid water [kg/m^3]
+c bmelt(nd) : Nodal melt function [kg/m^3]. Termed Pmelt in report=
+c            bwnew*(fl(bwnew,tnew)-fl(bwnew,told))
+c bmelts : Phase change term M in fluid flow equation in Report [kg/m^^2s]  
+c bp : approximate average barometric pressure over simulation period [mb]
+c bt(nd) : Nodal total bulk density [kg/m^3]
+c bv0 : constant for vapor diffusion
+c bw(nd) : Nodal bulk water density (liquid+ice) [kg/m^3]
+c bw2: Element of array bw(nd) used in COMBO.
+c bwfall : bulk density of precipitation [kg/m^3]
+c bwo(nd): Old nodal water constituents bulk density [kg/m^3]
+c cd : Drag coefficient at neutral stability
+c cdryair : specific heat of dry air [j/kg-k]
+c ce : Bulk transfer coefficient for water vapor at neutral stability
+c ceiling: ceiling(3) =    cloud base height. (km)
+c          (i=1 low cloud;  =2  middle cloud;  =3 high cloud)
+c cf :  Tanktrack solar shadowing factor
+c cfo : Old tanktrack solar shadowing factor
+c ch : Bulk transfer coefficient for thermal energy at neutral stability
+c ci(nd) : Specific heat of ice        [J/kg-K]
+c ci0 : specific heat of ice at 273.15 K [j/kg-K]
+c ck : Windless exchange coefficient for water vapor
+c cl : Specific heat of water at 273.15 K (4217.7) [J/kg-K]
+c cl12 : = 0.5*cl .
+c clearness: approximate clearness factor for the sky
+c            = 1 - cover(1)+ecover2+ecover3
+c cds(ld) : Dry soil specific heat [W/m-K]
+c c1: c1=ssim*1d3*porosity(i).
+c convect : Surface precipitation convective flux [W/m^2]
+c convecto : Old surface precipitation convective flux [W/m^2]
+c cosazi: Cosine of relative azimuthal angle
+c cosd: Cosine of declination angle
+c coselv: Cosine of slope elevation
+c cosz : cosine of solar zenith angle.
+c cover(3) : Fractional cloud cover. 1=low, 3=high
+c ct(nd) : Nodal combined specific heat of all constituents [J/kg-K]
+c ctrack : Tanktrack compression ratio (compacted depth/undisturbed depth)
+c d(nd) :  Nodal effective snow grain diameter (m)
+c da: used in interpolation between consecutive input airtemp data
+c dbvdt(nd) :1)Change in saturation vapor density per degree K [kg/m^3 K]
+c           :2)Change in bulk vapor density per degree K [kg/m^3 K]
+c dcos: Double precision cosine.
+c ddzdtp(nd) : Nodal thickness rate change due to precipitation [m/s]
+c de0 : effective diffusion coefficient for water vapor in snow  
+c          [m^2/s] at 1000mb and 273.15k
+c depth : solar penetration limit [m]
+c df(nd) : Coefficient for vapor diffision at nodal upper boundary
+c dfxdx : value of first derivative of f(x) at x
+c dice : density of ice (917) [kg/m^3]
+c dicem : 1.0-dice [kg/m^3]
+c dicevol(nd):  Volume fraction of ice
+c difftemp : difference between measured and calculated surface temperature [k]
+c diffuse: diffuse component of solar radiation sdown [W/m^2].
+c diffuseslope: diffuse radiation incident on sloped surface [W/m^2]
+c dirdown : Incident longwave radiation [W/m^2]
+c dirdowno : Old Incident longave radiation [W/m^2]
+c direct : Direct component of insolation [W/m^2].
+c directslope: direct radiation incident on sloped surface [W/m^2]
+c dis : used in interpolation between consecutive input solar data
+c djp(ld) : Plasticity index
+c dkdry(ld) : Dry soil thermal conductivity [W/m-K]
+c dkm : thermal conductivity for soil minerals [W/m-k]
+c dkmg(ld) : Thermal conductivity of soil minerals [W/m-K]
+c dksatu(ld) : Thermal conductivity of saturated soil [W/m-K]
+c dlatheat : Turbulent flux of latent heat [W/m^2]
+c dlatheato : Old turbulent flux of latent heat [W/m^2]
+c dlatt : Degrees latitude
+c dliqvol(nd):  Volume fraction of liquid water
+c dlm : Latent heat of fusion for ice(3.335E5) [J/kg]
+c dlong : Net long wave radiative flux [W/m^2]
+c dlongo : Old Net long wave radiative flux
+c dlongt: Degrees longitude.
+c dls : Latent heat of sublimation of ice (2.838E6) [J/kg] at 273.15
+c dlsdrw : constant for vapor diffusion =  dls/rw
+c dmass(nd) : Nodal mass, normalized per unit area [kg/m^2]
+c dmass2: Element in array dmass(nd) used in COMBO.
+c dmvol(ld) : Fractional volume of dry soil material
+c do:  Old nodal effective grain diameter [m]
+c do2: Element of array do used in COMBO. 
+c dr: Used in interpolation between consecutive input incoming longwave data
+c drh: Used in interpolation between consecutive input rh data
+c dsnowfall:  Effective grain diameter of falling snow particle (m)
+c dsol(nd) : Nodal absorbed solar radiation [W/m^2]
+c dsolo(nd) : Old nodal solar energy absorbed [W/m^2]
+c dssallowed : maximum allowed nodal change in saturation per
+c                      time step
+c dt :  Current time step [s]
+c dtbase : basic time interval between input meteorological data [s]
+c dtmax : maximum allowed time step [s]
+c dtmin : minimum allowed time step [s]
+c dto : Old time step [s]
+c dtprecip: Used in interpolation between consecutive input precip data
+c dtsmin:  Minimum allowed time step when water flow is present [s]
+c dtssmax : maximum time step for saturation criteria [s]
+c dtsum : time from start of input data interval [s]
+c dum : temporary variable
+c dw: Used in interpolation between consecutive input windspeed data
+c dz(nd) :  Elemental thickness [m]
+c dzdt: dzdt=dzo(i)/dt.
+c dz2 : Elements of array dzo(nd) used in COMBO
+c dzinc : maximum thickness for new snow nodes [m]
+c dzm : = Thickness 0f 1-ith element [m] (Now local to thparam.f?)
+c dzmin : minimum nodal thickness (except for precipitation cases) [m]
+c dzn : surface node maximum thickness [m] after snowfall has stopped
+c dznm : node under surface node maximum thickness [m] after snowfall has stopped
+c dzo(nd) : Old elemental thickness [m]
+c e0 :  Saturation vapor pressure at 0 degrees C [mb]
+c ea : Water Vapor pressure in air  [mb]
+c eao : Old Water Vapor pressure in air[mb]
+c ecover2: effective cover for middle clouds (cover(2)*(1-cover(1))
+c ecover3: effective cover for high clouds (cover(3)*(1-cover(1))*(1-cover(2))
+c effceiling: Effective cloud ceiling, defined as follows: 
+c           effceiling=(cover(1)*ceiling(1)+ecover2*ceiling(2)+ecover3*
+c     &               ceiling(3))/clearness
+c elev: slope elevation degree angle above horizon
+c em(ld) : Material-layer hemispherical all-wave emissivity
+c emo(ld) : Old hemispherical-emissivity for material-type layer
+c emsnow : Hemispherical snow emisivity [.97]
+c errtallowd: maximum allowed linearization error per time-step in heat balance
+c             eq, expressed in units of temperature [K]
+c es : Water Vapor pressure at surface [mb]
+c eso : Old Water Vapor pressure at surface [mb]
+c f(nd) : Slope of freezing curve for node [kg/m^3 K] (Note:f is
+c   defined here as the change in bl over dT, and in the report as
+c   the change in the fraction of liquid water over dT).
+c fext(nd) : Nodal transmission coefficient for the solar flux, 
+c            exp(-Beta*dz)
+c fl: =  Fraction of liquid or unfrozen water to total water, bl/bw (see flo)
+c flfall: Fraction of liquid water within falling precip.
+c flglim(nd,2) : Value of unfrozen water fraction 'flg' at phase boundaries
+c flgliml : Value at lower phase boundary
+c flglimh : Value at upper phase boundary
+c flg: Current value of flgo(nd)
+c flgo(nd) : Old mass fractional unfrozen water due to capillary potential
+c flo(nd) : Old nodal mass fraction of liquid (unfrozen) water due to both 
+c           capillary and adsorbed potential, blo/bwo
+c fname : temporary file name variable
+c fnm(nfiles) : list of i/o file names
+c fx : value of function f(x) at x
+c ftrack: Multiplicative shadowing factor to adjust diffuse and longwave
+c         radiation incident on tank tracks (not used in SNTHERM.89).
+c ftrackm:  1d0 - ftrack (not used in SNTHERM.89)
+c fullnode: Flag used to indicate whether top node is full (dz exceeds dzinc)
+c           Set within NEWSNOW.f.
+c g1: Constant in grain growth calculation (= 5.0d-7 in MAIN)
+c g2: Constant in grain growth calculation (= 4.0d-12 in MAIN)
+c gk(nd) : Constant for calculating temperature from melt [K]
+c gmt:  Greenwich mean time
+c gv(nd) : Coefficient for calculating temperature from melt
+c heatfluxbtop : Heatflux across lower boundary of surface node [W/m^2]
+c heatfluxbtopo:  Old value of heatfluxbtopo [W/m^2]
+c height : height above ground of measured met values
+c hg :  Geothermal heat flux (across snow/soil interface) [W/m^2]
+c hgo : Old geothermal heat flux [W/m^2]
+c ho(nd) : Water flux enthapy adjustment
+c hr : local hour angle of sun(calculated in subroutine zen).
+c hs: Water flux enthapy adjustment.
+c hso(nd) :  Old water-flux enthalpy-adjustment for sensible heat
+c i : loop or index variable
+c iarray: Common block in file arrays.
+c ib: = Lower node in flow zone =ibounds(nz,2)
+c ibasestep: Current number of basestep from start of problem
+c ibounds(15,2) : boundaries (element numbers) of zones
+c            where there is contiguous water flow
+c icalcstep : current number of calcultions from start of problem
+c ice(nd) : Set to 1 if node is solid ice (still used?)
+c icl(3) : Cloud type code
+c icoarse(ld) : Soil coarseness code (1=coarse  2=fine)
+c idelete(nd) : 1 signifies node to be removed from model
+c ido : flag if = 1 signifies hour = 5 am. used to flag operations done on 
+c       a daily basis
+c ifluxout : If = 1 signifies optional print-out of surface flux summary
+c ifn : file unit number
+c igood : consecutive good calculations counter
+c ihour : Hour of simulation, (read from met time-hack) 
+c ihour1 : Hour of simulation, (read from met time-hack)
+c ihour2 : track data hour
+c ihour3 : hour from soil moisture over-ride data
+c ii : index variable
+c ij1 : met data day
+c imetcalc: Flag. Optional generation of met data=1;Data read from file=0.
+c imin: Minute of simulation, (read from met time-hack)
+c impermeable(nd) : 1 = Node impermeable to water, 0 = Not.  See DENSITY
+c initial : Flag =1 for first calculation then set to 0
+c ioutfiltrate : flag (=1 to output filtration information)
+c ipond(nd) : Nodal flag =1 if water is ponding (not implemented0
+c iptype : precipitation type (from met data) 1= rain 2 =snow
+c ircalc : calculate longwave radiation if = 1 (not yet implimented)
+c iskip(nd) : 1 signifies that convergence criteria are skipped for
+c              this node
+c iskipo(nd):  Past value for iskip
+c islope : sloped terrain flag 1=yes 0=no
+c isolarcalc : estimate solar radiation flag 1=yes 0=no
+c istart : Snow just started flag 1=yes 0=no
+c it: Upper node in flowzone = ibounds(nz,1)
+c iter : Calculation step wihin basic time interval.  It is reset to 0 when
+c        the basic time interval is complete, which triggers a print-out
+c ithour : Hour when track is laid
+c itimezone:  Hourly difference of timezone from Greenwich mean time
+c ititle : flag to print header for filtration output
+c itm : read measured temperature flag 1=yes 0=no
+c itracks : If = 1 signifies that this run computes tanktrack temperature
+c           (not implemented)
+c itrklaid : If = 1 signifies that ttracks were laid during this iteration
+c           (not implemented)
+c iwet : Flag = 1 signifies wet snow.
+c iy : Year of simulation: last 2 digits, (read from met time-hack)
+c iy2 : year from track data
+c j : index or loop variable
+c jday : Julian day of simulation, (read from met time-hack)
+c jday2 : day from track data
+c k(nd) : Layer type assoicated with node
+c layertype (nd) characterstring. in common 'soilinfo'. Not used?
+c ld:  Parameter setting array limits on number of layers
+c ln : Number of different layers
+c ltype(ld) : Layer type 1=snow 99=user supplied soil layer
+c                2-3=soil types contained in Block Data file soil
+c m : index variable
+c melt(nd) : Signifies if node in meltzone if = 1
+c meltsnow: = 6d0 in data statement in init.f. (not used?)
+c n : Number of nodes in model
+c narray1: Vectors in common block array1 =30 (in ARRAYS)
+c narray2: Vectors in common block array2 =24 (in ARRAYS). Should be 
+c          increased if vectors are added.
+c nd:   Parameter setting array limits on number of nodes.  Must
+c       be > n+1.
+c newelm : Number of new nodes to be added to model 
+c newsno : If > 1 signifies that snow fall has occured
+c          recently (within past 72 hours)
+c nfiles:  Number of files
+c ngoodmin : minimum number of consecutive good calculations required
+c           before time step can be increased
+c ni : node argument to diffusion
+c niarray: Vectors in common block iarray =8 (in ARRAYS). Should be
+c          increased if vectors are added.
+c nmelt: Function NMELT determines if element is in melt state.
+c nn(ld) : Number of nodes in each layer type, lowest to surface
+c nold : Old number of nodes in model
+c nosnowcover : no snow cover flag 1= no snow cover 0=snow cover
+c nsoil : Number of soil nodes
+c numsoiltype : Max soiltype number? Defined in CONST.f.
+c nz : Index denoting number of flowzone
+c nzone : number of zones of contiguous water flow
+c ok : Used in trapping overshot phase boundary.
+c orientation : track parameter (not implemented)
+c overburden : pressure of overlying snow [kg/m^2]
+c p : coefficent of x^2 of polynomial
+c pdzdtc(nd) : Nodal rate of change in fractional-thickness due to 
+c             compaction [fraction/s]
+c pinv : major print-out interval [hr]
+c porosity : fractional volume of voids: between ice matrix in
+c                snow and between dry matrix in soil
+c prcp : Precipitation Value (m/hour)
+c prcpo : Old Precipitation Value (m/hour)
+c prcpstore : stores past read-in precip value
+c print: print (if true) flag, usually at the hour
+c q : coefficent of x of polynomial
+c qf(nd) : .5*specific heat of water*nodal mass water flux 
+c qk(nd) : .5*(thermal conductivity at upper nodal boundary/nodal thickness), 
+c qlat :  Wind function (coefficient) for latent heat exchange [W /(m^2 mb)]
+c qlato : Old wind function for latent heat exchange [W/(m^2 mb)]
+c qs(nd) : Coefficient on nodal stored heat [W/m^2K]
+c qsen :  Wind function (coefficient) for sensible heat exchange [W/(m^2 K)]
+c qseno: Old wind function for sensible heat exchange [W/(m^2 K)]
+c qtz(ld) : Quartz Content of layer (decimal)
+c r : : constant in polynomial
+c r1: r1=-ap+dsqrt(bp) in fssest.f.
+c r2: r2=-ap-dsqrt(bp) in fssest.f.
+c rad(3) : rad(1) : Incident solar radiation [W/m^2]
+c          rad(2) : Reflected solar radiation [W/m^2]
+c          rad(3) : Incident longwave radiation [W/m^2]
+c rainrate : Rain Rate [m/s]
+c rainrateo : Old Rain Rate [m/s]
+c rce : cd/ce
+c rch : cd/ch
+c recross: Used in trapping overshot phase boundary.
+c redo: Logical flag used in ftemp.f denoting that it is ok to redo
+c       iter.,=dt .gt.1.1*dtmin .and. istart.eq.0.and.iskip(n).eq.0
+c reflected: reflected radiation from slope surface [W/m^2]
+c relazimuth: ||slope azimuth - solar azimuth| + pi|  (Should = 0. 
+c             for sun facing slopes)
+c repeat : logical flag denoting a repeat of this iteration (if true)
+c rfactor: fractional saturation.
+c rh : Relative humidity
+c rho : Old relative humidity
+c rhod(ld) : Intrinsic density of dry soil material [kg/m^3]
+c rhowater: = Intrinsic density of water=1000. [kg/m^3]
+c rmsqt1 : running sum of (calculated - measured surface temperature)^2
+c rtmsq : rms error of (calculated - measured surface temperature)
+c rw : gas constant for water vapor (461.296) [J/kg-k]
+c r1(4,4): = Cubic polynomial coefficients for Reflectivity
+c            for clear sky, in DINSOL.f
+c r2(4,4): = Cubic relectivity coeffients for Reflectivity
+c            for cloudy skies, in DINSOL.f
+c s :  not used in polythirdorder
+c sb : Stefan-Boltzman constant [W/m^2-K^4] (5.669E-8)
+c sbt3 : sb * (surface temperature^3)
+c sbt3o : sb * (old surface temperature^3)
+c scharc(8,np) : Array defined as follows:
+c columns of scharc are 1) intrinsic density of dry mineral solids
+c                       2) bulk density of substance
+c                       3) heat capacity of dry mineral solids
+c                       4) thermal cond of dry bulk substance
+c                       5) coarseness code 1=coarse  2=fine
+c                       6) plasticity index
+c                       7) albedo (normal incidence)
+c                       8) emissivity
+c sdown : Incident solar radiative flux [W/m^2]
+c sdowne : Extra-terrestrial solar insolation, corrected for earth's 
+c          elliptical orbit [W/m^2]
+c sdowno : Old incident solar radiative flux [W/m^2]
+c sensheat : Turbulent flux of sensible heat [W/m^2]
+c sensheato : Old turbulent flux of sensible heat [W/m^2]
+c shadow: = .8d0 if dcos(float(iseconds)*pi/360d0) > .5d0, 0d0 otherwise??
+c sind: Sine of solar declination angle
+c sinz: Sine of solar zenith angle
+c slope : elevation angle of slope from horizontal [deg]
+c snowdepth : snow depth [m]
+c snowrate : Current snow rate [m/s]
+c snowrateo : Old snow rate [m/s]
+c soildepth : model soil depth [m]
+c soiltype(numsoitype) : Name of user supplied soil type.
+c solar : Net solar radiative flux [W/m^2]
+c solaro : Old net solar radiative flux [W/m^2]
+c solidporosity : Volume of voids between dry soil and ice
+c ss(nd) : Effective water saturation = (s - ssi)/(1. - ssi)
+c ssi(nd) : Irreducible water saturation 
+c ssim: ssim=1.-ssi
+c ssisnow : Irreducible water saturation for snow [.04]
+c ssminsnow : -ssisnow/(1d0-ssisnow)
+c sso(nd) : Old effective water saturation
+c sup : Reflected solar flux [W/m^2]
+c supo : Old reflected solar flux [W/m^2] 
+c t(nd) : Nodal temperature [K]
+c t1(4,4): = Cubic polynomial coefficients for Transmissivty
+c            for clear skies, in DINSOL.f
+c t2(4,4): = Cubic polynomial coefficients for Transmissivty
+c            for cloudy skies, in DINSOL.f
+c td(nd) : Nodal depression temperature, t-273.15.  [K]
+c tdh : Depression temperature at upper phase boundary = tdl(j,2),
+c       used within metlzone.f
+c tdh13 : tdh raised to (1/3) power
+c td13(nd) : Nodal temperature depression from 0 C raised to (1/3) power
+c tdl(ld,2) : Depression temperature at meltzone or phase boundaries [K]
+c tdl13(ld,2): tdl(ld,2) raised to (1/3) power
+c tdl : Depression temperature at lower phase boundary = tdl(j,1),
+c       used within metlzone.f
+c th(ld) : Upper meltzone temperature limit [K]
+c thk(nd) : Current Nodal thermal conductivity [W/m-K]
+c thkair : thermal conductivity of air (.023) [W/m-k]
+c thkice : thermal conductivity of ice [W/m-k]
+c thkm : = thk(i-1) as called by MAIN (in thparam).(Now local to thparam.f?)
+c thsnow : meltzone upper limit temperature for snow [k]
+c tkair : Air temperature [K]
+c tkairo : Old Air temperature [K]
+c tl(ld) : Lower meltzone temperature limit [K]
+c tlsnow : meltzone lower limit temperatures [k}
+c tm : measured surface temperature [k]
+c tmn : measured surface temperature (in readtm)
+c tmsg : measured snow/ground interface temperature [k]
+c to(nd) : Old nodal temperature [K]
+c topflux: Energy flux across air/medium interface, excluding solar
+c          flux [W/m^2]
+c topfluxk : Constant in linearized expression for surface flux [W/m^2]
+c topfluxo : Old Flux at surface heat flux [W/m^2]
+c topfluxv : Coefficient on t in linearized expression for surface 
+c                  flux [W/m^2 K]
+c tprecip : Precipitation temperature [K]
+c tprecipo : Old precipitation temperature [K]
+c trdepth: Track depth (not implemented)
+c trwidth: Track width (not implemented)
+c tsurface : Called as to(n) in MAIN (qturb)
+c u(nd) : Nodal convective mass flux of water [kg/m^2-s]
+c umax : Maximum convective mass flux of water [kg/m^2-s]
+c unbar(nd) : Average nodal convective mass flux of water  [K/m^2 s]
+c unold: .5*Net nodal water for past period (in filtrate)  [K/m^2 s]
+c uo(nd) : Old nodal convective mass flux of water [kg/m^2-s]
+c upo: uo(i+1) as called in filtrate (in function fssest).
+c us(nd) : Nodal convective mass flux of snow [kg/m^2-s]
+c uvapor(nd) : Net diffusive mass flux of water vapor for element [Kg/m^2 s]
+c ufvapor(nd) : "Average" diffusive flux at nodal centroid [(upper+
+c              lower)/2]. Used in computation of graingrowth.[Kg/m^2 s]               
+c wdir : Wind direction [degrees]
+c wdiro : Old Wind direction
+c wmass : temporary variable used in mass/density calculations
+c wsp : Wind speed [m/s]
+c wspo : Old Wind speed [m/s]
+c wt(4,6): = Biquadratic polynomial coefficients for the Weights, 
+c            in DINSOL.f.
+c x : function to be calculated at this point (in polythirdorder)
+c xm: xm=12d0+0.12357d0*sinp-0.004289d0*cosp+0.153809d0*sin2p+0.060783d0*cos2p.
+c z(nd) : Nodal Cumulative distance from snow/soil interface to
+c         centroid of node [m]
+c znaught : Roughness length for turbulent transfer of momentum [m]
+c
+
+c LISTING OF DATA INPUT
+c ***************IMPORTANT***********************************************
+c !!!THIS LIST IS NOT UP_-O-DATE: USE THE USER"S QUIDE INSTEAD!!!
+c ***************IMPORTANT***********************************************
+c Unless otherwise specified all entires should be in free format,
+c separated by a standard delimiter (blank, comma, etc.).  Suggested 
+c values are in parenthesis.  All units are in the MKS system.
+c Except for "FILENAME", file names may be in any combination of
+c legal FORTRAN strings of twelve characters or less. 
+c REAL VARIABLES (first letter in name a-h or o-z) MUST CONTAIN
+c A DECIMAL POINT in the data input.
+c
+
+c File FILENAME
+c Contains filenames in format A12, one name per line.  Files are as
+c follows:
+c
+c LAYER.IN (required input)
+c MET.IN (required input)
+c TC.IN (optional input)
+c SNOW.OUT (general output file)
+c FLUX.OUT (optional surface flux output)
+c FILT.OUT (optional water infiltration output)
+c
+c All filenames must be specified, even if the files are not used.
+c The user can fill in with a ficticious or dummy file name as long as
+c no file name is repeated.
+ 
+c File LAYER.IN
+c (Asterisk* options are not permitted at this time)
+
+c LINE READ 1: General parameters
+c Number of layers                                                   (2)
+c Print-out interval for LAYER.OUT (every nth hour).                (12)
+c Optional hourly print-out of incident heat fluxes. 1=yes  0=no     (0)
+c Approximate average barometric pressure(mb) over period of run. (990.)
+c Estimate solar radiation.  1=yes  0=no                             (0)
+c Estimate incident longwave radiation.  1=yes  0=no                 (0)
+c Sloped terrain.     1=yes  0=no                                    (0)
+c Snow is compacted (tanktracks).   1=yes  0=no                      (0)
+c Near IR extinction coefficient for top snow node                (500.)
+c Optimal input of measured surface temperature data 1=yes  0=no     (0)
+c Optional print-out of water infiltration estimates  1=yes  0=no    (0)
+c       Note: This option may generate extensive output.
+c Basic time period in secs (determined by time step of MET data)(3600.)
+c Estimate standard MET data from user-supplied routine  1=yes  0=no (0)
+
+c LINE READ 2:  Measurement heights above ground surface for MET 
+c     data in meters
+c Air Temperature height                                            (2.)
+c Wind speed height                                                 (2.)
+c Dew Point or relative humidity height                             (2.)
+c
+c LINE READ 3:  Specifications of characteristics for each layer type.  
+c Since layers number in ascending order, BEGIN WITH THE LOWEST LAYER
+c FIRST. For some stock material types, many of the characteristics are
+c automatically supplied from a database in the model. 
+c Codes for materials currently catalogued in the model are:
+c  1 = snow   2 = clay   3 = sand   [90..99] = user supplied material
+
+c Enter the following items, one line per layer type: [Note: the model
+c will soon be revised to include all but the first three items within
+c the internal database.  User defined properties are read at Line 5.]
+
+c   Number of nodes                                            (integer)
+c   Material code                                              (integer)
+c   Quartz content                                           (0.2 - 0.9)
+c   Roughness length                                   (.001 m for snow)
+c   Bulk transfer coefficient for eddy diffusivity or 999
+c   Turbulent Prandtl number                               (1. for snow)
+c   Turbulent Schmidt number                               (1. for snow)
+c   Windless convection coefficient                      (3.45 for snow)
+
+c LINE READ 4.  Convergence related input
+c
+c Number of successive good calculations before increasing time step   (2)
+c Minimum allowable time step in seconds                              (5.)
+c Minimum allowable time step when water flow is present.  Cannot
+c     be greater than 10                                               (3)
+c Maximun allowable time step.  Should not be greater than 900      (900.)
+c Maximum allowable time step when water flow is present.  Should
+c     not be greater than 900.                                      (900.)
+c Maximun allowable change in saturation per time step               (.01)
+c Maximim allowable temperature estimation error per time step       (.02)
+c     in degrees Celsius
+
+c LINE READ 5 (Optional):  If you desire to supply your own
+c material characteristics for a given layer, use a code from 90 to 99 and 
+c the model will then expect to read the following items.  This read will 
+c be repeated for each layer whose type is in the user defined range of 90
+c to 99.
+c
+c Density of dry minerals in  material   kg /m^3                   (2700.)
+c Bulk density of dry material  kg /m^3                            (1000.)
+c Heat capacity of dry material J/kg-K                              (800.)
+c Thermal conductivity for dry material  W/m-K                     (0.113)
+c Coarseness code (1=coarse, 0=fine)                                  (1.)
+c Plasticity index (0.0-0.30)                                       (0.20)
+c Albedo (at normal incidence)                                      (0.40)
+c Emissivity                                                        (0.90)
+
+
+c LINE READ 6 (optional): Required data if solar insolation is to be
+c calculated or the terrain is sloped.
+c
+c Degrees latitude
+c Degrees longitude
+c Elevation angle of slope in degrees, measured from horizontal.
+c Azimuthal angle in degrees of fall-line, measured clockwise from
+c   absolute north.
+c Hours difference of local time from Greenwich mean time
+
+c LINE READ 7 (optional): Required data for tank tracks.
+c
+c Time-hack when track was laid: Year (last two digits only),
+c     julian day, 24-hour time
+c Compaction ratio (compacted snow depth/undisturbed snow depth)
+c Track width
+c Compacted snow depth
+c Track orientation (in degrees, relative to due north)
+
+c LINE READ 8:  Initial node values.  One line for each node,
+c  START WITH THE BOTTOM NODE AS NODE NUMBER 1.
+c
+c Temperature (Kelvins)
+c    Comment: The model uses a freezing curve to determine what portion,
+c    f1, of the nodal water content is unfrozen.  In the case of snow, 
+c    it has been arbitrarily been set to begin melting near 272.83 K
+c    according to the relationship
+c      f1 = 1./[1. + (100.Td)^2].
+c
+c Node thickness (m)
+c    For the top 2 nodes, thicknesses are usually initialized at 0.01 
+c    and 0.02 m.  The minimum allowable thickness for any node is 0.002m
+c    and the maximum allowable thicknesses for the top two nodes are 
+c    respectively 0.0163 and 0.0333m.
+c Bulk water density, frozen and liquid  (Kg/m^3)
+c    Initial bulk water density for soil should  be between 
+c    (0.75*plasticity number*bulk dry soil density) and the 
+c    saturation level (density of ice * porosity)
+c    For soil nodes, the plasticity number (ranging from 0.03 for sand
+c    to 0.25 for clay) is (among other things) generally related to
+c    grain size and minimum (irreducible) water content. 
+c Grain diameter (m)
+
+c File MET.IN
+c This file contains meteorological values, usually in the form of hourly
+c averages (time-step indicated in LINE READ 1).  Optionally, values may
+c be generated by theoretical functions (repeated constants, sine-waves,
+c etc.).
+c
+c Year. Last 2 digits only
+c Julian day
+c Hour
+c Minute
+c Ambient air temperature (Kelvins)
+c Relative humidity
+c Windspeed (m/sec)
+c Incident solar radiation (watts/m^2) or 9999.
+c Reflected solar radiation (watts/m^2)  or 9999.
+c Incident longwave radiation (watts/m^2) or 9999.
+c Precipitation accumulation in m/hour (Snow is actual amount, not water 
+c    equivalent)
+c Precipitation type code 1=rain  2=snow or sleet
+c Effective diameter of precip particle (m) 
+c Optional: Include cloud conditions if solar or longwave radiation need
+c to be calculated, otherwise leave blank.
+c Fractional cloud coverage (0.0-1.0) and--
+c    Type code for low cloud layer:     0=None   4=Sc or St   5=Cu or Cb
+c Fractional cloud coverage (0.0-1.0) and--
+c   Type code for middle cloud layer  0 None  3=As, Ac or any other
+c Fractional cloud coverage (0.0-1.0) and--
+c   Type code for high cloud layer:     0=None    1=Ci     2=Cs
+
+c Optional file TC.IN
+c Contains measured values of surface and snow/ground interface temper-
+c atures from which to calculate an RMS error.  Data should be at the 
+c basic time-step rate (usually hourly).  each line should contain a
+c time-hack and the two measured temperatures (degrees Kelvin) in free 
+c format as:
+
+c Year. Last 2 digits only
+c Julian day
+c Hour
+c Minute
+c Snow/ground interface temperature (degrees Kelvin)
+c Surface temperature (degrees Kelvin)
+c
+c If this option is selected, THERE MUST BE MEASURED VALUES FOR EACH
+c TIME-HACK, or the model will give the error message "MET data and 
+c thermocouple are out of sync.".  If data is unavailable, input the
+c dummy value 999, and the model will ignore the datapoint.
+
+

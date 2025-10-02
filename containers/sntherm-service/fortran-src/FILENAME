@@ -1,0 +1,18 @@
+'test.in'
+'metswe.in'
+'undist2'
+'brock.out'
+'brock.flux'
+'filt.out'
+'brock.dum'
+'brock.temp'
+c
+Following are file descriptions
+        General parameters and initial nodal values
+        Meteorological data
+        Optional files of measured surface temperatures
+        General output file
+        Optional output file of surface fluxes
+        Optional output file of infiltration /daily flux summ. Don't use
+        Water content pfofiles: for Rachel's use only 
+        Output temperature profiles

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - SnthermApi__BaseUrl=http://sntherm-service:80
+    depends_on:
+      - sntherm-service
+
+  sntherm-service:
+    build: ./containers/sntherm-service
+    ports:
+      - "8001:80"
+    volumes:
+      - ./containers/sntherm-service/data:/app/workdir

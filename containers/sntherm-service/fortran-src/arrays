@@ -1,0 +1,133 @@
+c***********************************************************************
+c ARRAYS is an INCLUDE segement containing common blocks
+c***********************************************************************
+c  This INCLUDE segment contains the main arrays and variables.  See
+c  file 'const' for the values of nd (node arg) and ld (layer arg).
+c  Arrays in the first three common blocks(ARRAY1,ARRAY2 and IARRAY)
+c  are automatically shifted up or down when nodes are added or
+c  removed.
+c
+c  ARRAY1 should contain 30 double precision items of size nd.
+      integer narray1
+      parameter (narray1=30)
+      double precision t(nd),to(nd),bw(nd),bwo(nd),bl(nd),bi(nd),bt(nd)
+      double precision dz(nd),z(nd),gk(nd),gv(nd),qk(nd),qf(nd),qs(nd)
+      double precision flo(nd),u(nd),uo(nd),td(nd),ho(nd),f(nd)
+      double precision ci(nd),flgo(nd),dsolo(nd),pdzdtc(nd),do(nd)
+      double precision porosity(nd),us(nd),dmass(nd),ddzdtp(nd),dzo(nd)
+
+      common /array1/ t,to,bw,bwo,bl,bi,bt,dz,z,gk,gv,qk,qf,qs,
+     1flo,u,uo,td,ho,f,ci,flgo,dsolo,pdzdtc,porosity,us,dmass,
+     2ddzdtp,dzo,do
+      double precision array1(nd,30)
+      equivalence (array1,t)
+cc
+c  Common block ARRAY2 should contain only double precision arrays of
+c  size nd.  If the number of items exceeds 30, start a new block.
+c  ***VERY IMPORTANT***. IF THE NUMBER OF ITEMS IS CHANGED, BE SURE
+c  TO CHANGE 'NARRAY2' IN THE PARAMETER STATEMENT.
+c
+      integer narray2
+      parameter (narray2=25)
+      double precision bbo(nd),thk(nd),unbar(nd),df(nd),b(nd),hso(nd)
+      double precision d(nd),uvapor(nd),ss(nd),bmelt(nd),bb(nd),blo(nd)
+      double precision ct(nd),td13(nd),sso(nd),ssi(nd),hs(nd),binew(nd)
+      double precision dbvdt(nd),dsol(nd),fext(nd),dicevol(nd)
+      double precision dliqvol(nd),ufvapor(nd),solidporosity(nd)
+c
+      common /array2/ bbo,thk,unbar,df,b,hso,d,uvapor,ss,bmelt,bb,blo,
+     &ct,td13,sso,ssi,hs,dbvdt,dsol,fext,dicevol,dliqvol,ufvapor
+     &,solidporosity,binew
+      double precision array2(nd,narray2)
+      equivalence (array2,bbo)
+c
+c Common block IARRAY should contain only integer arrays of
+c size nd.  If the number of items exceeds 30, start a new block.
+c ***VERY IMPORTANT***. IF THE NUMBER OF ITEMS IS CHANGED, BE SURE
+c TO CHANGE 'NIARRAY' IN THE PARAMETER STATEMENT.
+c
+
+      integer niarray
+      parameter (niarray=8)
+      integer melt(nd),ice(nd),idelete(nd),iskip(nd),impermeable(nd)
+      integer k(nd),iskipo(nd),ipond(nd)
+      integer iarray(nd,niarray)
+      common /iarray/melt,ice,idelete,iskip,iskipo,k,impermeable,ipond
+      equivalence (melt,iarray)
+c
+c Common block ARRAY3 contains miscellaneous arrays, mostly of size ld.
+c
+      double precision flglim(ld,2),tdl(ld,2),tdl13(ld,2)
+      double precision emo(ld),albo(ld),th(ld),tl(ld),a223(ld)
+      double precision dkmg(ld),qtz(ld),znaught(ld),a213(ld)
+      double precision cd(ld),ce(ld),ch(ld)
+      double precision dksatu(ld),a243(ld),bdcd(ld),csk(ld)
+      double precision rce(ld),rch(ld),ck(ld),a1(ld),a2(ld),bdjp(ld)
+      double precision a(nd,3),rad(3),cover(3),dmvol(ld),ceiling(3)
+c Nov 18, 1996
+c     double precision sqrtCdn(ld),dlogWt(ld),dlogWw(ld),dlogQt(ld),
+c Feb 5, 2002
+      double precision sqrtCdn(ld),dlogWt(ld),dlogWw(ld),dlogTt(ld),
+     & dlogQq(ld)
+      integer ltype(ld),nn(ld),icl(3)
+      common /array3/flglim,tdl,tdl13,emo,albo,th,tl,dkmg,qtz,
+     &znaught,cd,ce,ch,dksatu,a243,bdcd,csk,
+     &rce,rch,ck,a223,a213,a1,a2,rad,cover,a,bdjp,dmvol,ceiling,
+c Nov 18,1996
+c    &sqrtCdn,dlogWt,dlogWw,dlogQt,dlogQq,xlimitd,
+c Feb 5, 2002
+     &sqrtCdn,dlogWt,dlogWw,dlogTt,dlogQq,
+     &icl,ltype,nn
+c
+c Common block PARAM contains miscellaneous scalar parameters
+c
+      integer ln,iter,n,nfront,meltsnow,iwet,initial
+      integer newelm,nsoil,nold,istart,nosnowcover
+      double precision cf,cfo,sdown,sdowno,sup,supo
+      double precision dirdown,dirdowno,wsp,wspo,wdir,solar,solaro
+      double precision wdiro,rh,rho,tkair,tkairo,ea,eao,es,eso
+      double precision rainrate,rainrateo,snowrate,snowrateo,qsen
+      double precision qseno,qlat,qlato,umax,prcp,prcpo,hg,hgo,sbt3o
+      double precision sbt3,topfluxo,e0,sb,cl,convect,convecto
+      double precision dlong,dlongo,sensheat,sensheato,dlatheat
+      double precision dlatheato,heatfluxbtop,dto,tprecip,tprecipo
+      double precision topfluxv,topfluxk,dlm,dls,dlv,dtbase
+      double precision da,dr,drh,dw,dtprecip,dis,heatfluxbtopo
+      double precision soildepth,dt,flfall,rhowater,dice,dprecip
+      double precision prcpstore
+c
+      common /param/ cf,cfo,
+     2 sdown,sdowno,sup,supo,dirdown,dirdowno,wsp,wspo,wdir,solar,
+     3 solaro,wdiro,rh,rho,tkair,tkairo,ea,eao,es,eso,rainrate,
+     4 rainrateo,snowrate,snowrateo,qsen,qseno,qlat,qlato,
+     5 umax,prcp,prcpo,hg,hgo,sbt3o,
+     6 sbt3,topfluxo,e0,sb,cl,convect,convecto,
+     7 dlong,dlongo,sensheat,sensheato,dlatheat,dlatheato,heatfluxbtop,
+     & tprecip,tprecipo,
+     & dto,topfluxv,topfluxk,dlm,dls,dlv,dtbase
+     & ,da,dr,drh,dw,dtprecip,dis,heatfluxbtopo,soildepth,dt
+     & ,flfall,rhowater,dice,dprecip,prcpstore
+     & ,ln,iter,n,nfront,meltsnow,iwet,initial
+     & ,newelm,nsoil,nold,istart,nosnowcover
+c
+c Common block SDATA contains soilayer characteristics used in this
+c simulation.  Araays are of size ld.
+c
+      double precision rhod(ld),bd(ld),cds(ld),dkdry(ld)
+      double precision djp(ld),alb(ld),em(ld)
+      integer icoarse(ld)
+c
+c1.28.03     common /sdata/rhod,bd,cds,dkdry,icoarse,djp,alb,em
+      common /sdata/rhod,bd,cds,dkdry,djp,alb,em,icoarse
+c
+c Common block SOILDATA stores internal database of soil
+c characteristics (in blockdata SOIL).  Np is declared in CONST.f
+c
+      double precision scharc(8,np)
+      common /soildata/ scharc
+c
+c Common block SOILINFO contains info on user supplied soil?
+c
+      
+      character*10 soiltype(numsoiltype),layertype(nd)
+      common /soilinfo/ soiltype,layertype

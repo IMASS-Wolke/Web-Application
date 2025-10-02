@@ -1,0 +1,15 @@
+c***********************************************************************
+c  CONST stores constants used in model. Include this file in front of
+c  all common block includes.
+c***********************************************************************
+c
+      integer nd,ld,np,nfiles,numsoiltype,rbad
+      double precision dtol1,dtol2,dtol3
+      parameter (dtol1 = 1.0d-12, dtol2 = 1.0d-07,dtol3= 1.0d-05)
+c integer constants used to dimension common block arrays 
+c     parameter (nd=70)
+      parameter (nd=200)
+c Nextchanged just for 'bill' run 
+c     parameter (ld=4)
+      parameter (ld=5)
+      parameter (np=2,nfiles=6,numsoiltype=99,rbad=999)

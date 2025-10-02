@@ -71,6 +71,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 
+// Register Sntherm API service
+builder.Services.AddHttpClient<ISnthermApiService, SnthermApiService>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = config["SnthermApi:BaseUrl"] ?? "http://localhost:8001";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 builder.Services.AddControllers();
 
@@ -94,6 +101,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 //Seed Admin User if none exists (this comes directly from our DbSeeder class using the function)
-await DbSeeder.SeedDataAsync(app);
+//await DbSeeder.SeedDataAsync(app);
 
 app.Run();

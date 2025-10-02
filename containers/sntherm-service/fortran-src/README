@@ -1,0 +1,310 @@
+SNTHERM89.rev4 upgrade. Further revisions made through November 20,1996.  
+Note improvements to turbulent transfer routine (Item 6) and new print-out options  
+(Item 7).
+
+I am in the process of creating a Web-Site for the User's Guide to make it available
+over the internet along with the computer code.  It should be completed by the end
+of the year.
+
+*******************************************************************************
+This directory contains code for SNTHERM89.rev4, released on Nov 10, 1995. 
+Questions about the code should be addressed to Ms. Rachel Jordan, USA-CRREL.
+e-mail:rjordan@crrel.usace.army.mil.
+
+A running list of changes made to the code since Nov 10, 1995 is recorded in the
+file README.CHANGES. IT IS THE RESPONSIBILITY OF THE USER TO CHECK THIS FTP SITE
+FROM TIME TO TIME AND TO KEEP UP WITH THESE CHANGES. 
+
+A. The major upgrades affecting this version are:
+
+1) A variable albedo algorithm can be triggered by inputting a snow albedo 
+greater than 1. The routine is an adaptation of that described in the 
+dissertation of Danny Marks (1988), which in turn is based on the work of 
+Marshall and Warren (1987). The main driver in the routine is grain size.  The 
+routine does not handle dirty or shallow snow (<10cm) and is limited to clear 
+sky conditions, but does make an adjustment for slope and solar angle. 
+Complete documentation can be had from R. Jordan.
+
+The following new options require additional input to LINE READ 1 of the 
+LAYER.IN file. 
+
+2) There are now three ways to specify the density of new snow, which was 
+previously hard-wired to 100 kg/m3.  A lower limit is set to 30 kg/m3.
+
+   a. A fixed density for new snow [bifallin] can be input.
+   b. SNTHERM can estimate the new density based on air temperature, using 
+the Alta function described in Anderson (1976) or in LaChapelle (1961). This 
+option is triggered by inputting a density greater than 950. kg/m3.  There are 
+of course variables other than temperature affecting the new snow density 
+(wind speed, crystal type, etc.), so that estimates may be off by as much as 
+50%
+   c. If 0.0 is input, new snow densities will be read from the MET.IN file.  
+The column for this parameter should be inserted after that for new grain size. 
+Establishing these values is tricky, since density measurements need to be 
+corrected for settlement during the storm. Adjustments are best made using eq 
+(26) in Jordan (1991), with T as an average temperature.  By integrating (26) 
+the average settlement is found as the rate times one-half the time elapsed 
+since the beginning of snowfall.  As discussed in item 5), the settling phase  
+of compaction is now limited to either 15% over the initial density or by the 
+"dmlimit" cutoff. Back correction for settlement should consider these limits.  
+The overburden contribution to compaction is small by comparison and can 
+be neglected in the correction.
+
+3) THE PRECIPITATION RATE IS NOW ENTERED IN THE MET FILE IN M/HR OF SNOW 
+WATER EQUIVALENT UNITS, instead of in m/hr of as snow accumulation.  This 
+change was necessary because of the variable new snow density, but also has 
+has the benefit that swe can be taken directly from the precip gauge. 
+
+4) The upper limit on snowfall is set at +2.5C.  This determination was based 
+on data provided in Snow Hydrology (1956), p. 55.  The percentage of liquid 
+water by mass in falling snow is arbitrarily set to vary linearly with air 
+temperature from 0% at 0C to a 40% maximum at + 2C.
+
+ 5) Recent testing of the compaction algorithm, taken from Anderson (1976), 
+indicated that adjustments were in order. The settling or destructive 
+metamorphism component was found to significantly overpredict the 
+compaction rate for new snow and the overburden component to compact the 
+snow too slowly.  More study is needed of the compaction rate of new snow,
+but as a 'Band-Aid' it is suggested that the upper snow density limit  
+[dmlimit] for the settling process be lowered from the previously fixed value 
+of 150 kg/m3 to around 100 kg/m3. Dmlimit is now entered in the LAYER.IN file, 
+and the model takes as a cut-off the smaller of this value and the density of  
+the snow at the start of the storm compacted by 15%.  Limited testing of the 
+overburden function suggests a lower value of 0.9d6kg-s/m2 for the viscosity 
+coefficient, slightly less than the value of 1.0d6kg-s/m2 used by Brun et al.
+(1989). The viscosity coefficient [eta0] is now an input. In Jordan (1991), 
+the units on eta0 were incorrectly stated as N-s/m2 and the units on 
+overburden as N/m2 instead of kg/m2.  In accordance with Brun et al., I have 
+also changed the exponential scaling factor on density in eq (29) from 0.021 
+to 0.023 m3/kg.  The model had adjusted for mass losses due to melt by 
+decreasing the thickness of nodes (rather than by decreasing snow density).  
+In the heavier stages of melt this procedure contributed to over-densification 
+of the pack, and with the exception of the top node has now been limited to 
+snow less dense than 250 kg/m3. The compaction of wet snow and snow 
+undergoing melt needs further study.  In the later stages of the melt period, 
+after the snow has undergone several freeze-thaw cycles, the model over-
+densifies the snowcover due to repeated freezing of the retained residual 
+water.
+
+
+6) Turbulent Transfer. SNTHERM was originally fit to measured data on cold snow, with 
+the primary intent of predicting snow surface temperature.  The parameters in the 
+User's Guide are a best fit for these purposes and conditions.  In addition, 
+the stability correction for stable atmospheric conditions was turned off, as  
+it appeared to degrade the model's ability to predict surface temperatures.  
+Subsequent testing of the model under melt conditions, at CRREL and 
+elsewhere, have indicated that these default parameters cause the model to
+over-predict melt.  The current recommendation (as of November, 1996)
+is to use the stability correction , but to set an upper limit on the Richardson
+number. This is done through a new input switch [istboff], where the stability
+correction is turned off when istboff = 1, is on when istboff = 0 and is on with 
+a limit of Rb = 0.16 when istboff = 2.  The current hard-wired limit of 0.16 is 
+conservative.  It could be set as low as 0.12 and still be realistic.
+
+AS OF NOVEMBER 1996, QTURB AND QTURB2 ARE REPLACED WITH QTURB3.
+The main addition to this routine is the correct computation of the transfer
+functions when measurement heights for air temperature, wind speed and Rh are at
+different levels.  To improve computation of the Richardson number, an estmation
+of the new surface temperature is used rather than the past temperature.  The "iqturb" 
+switch is no longer used, but is required as a "space holder."
+
+
+7) Alternative output. CRREL added alternative output options as part of 
+ongoing developments in distributed runs which may be of use to other SNTHERM 
+users.  Specific shell scripts used at CRREL rely on different output formats
+for both the standard output file ("snow.out") and the flux output file
+("flux.out").  The ifluxout variable is now used as a generic output format
+variable.  The values of ifluxout are the sum of the flux.out format code and
+the snow.out format code.  The use of these format codes retains the original
+values of ifluxout for the default output formats, but also allows for new
+output formats to be developed and for any combination of output formats
+to be used.
+
+snow.out format codes used in ifluxout variable:
+
+0	default (original) output format (write.f)
+10	no snow output
+20	alternative output format 2 (write2.f)
+30	alternative output format 3 (write2.f)
+
+flux.out format codes used in ifluxout variable:
+
+0	no flux output
+1	default (original) flux output format
+2	alternative output format
+
+All alternative snow.out formats differ from the original format as follows:
+
+- no header information
+- swe(mm), depth(m), outflux(kg/m2) and cold content (j/m2) are printed after a '|' on time line
+- time line printed before snow profile (instead of after)
+
+Alternative snow.out format 2 also differs as follows:
+
+- only top soil layer printed
+- time line only printed when snow profile is printed
+
+The alternative flux.out format differs from the original format as follows:
+
+- no header information
+- eliminated met data after flux columns
+- time changed to decimal-day format
+- order of remaining columns changed 
+
+
+8) Summary of LAYER.IN (generic name) file changes.
+
+LINE READ 1: General Parameters. 
+
+Items which have been changed or added are noted by an asterisk.  
+
+-Number of layers (if >4, increase parameter 1d in file const.)		(2)
+-Print-out interval for LAYER.OUT(every nth base-step or if code=99,at 
+	base-time interval						(12)
+-*Optional print-out of surface heat flux file:1=yes 0=no		(0) 
+	Other codes will generate alternative output files 
+	(see Section 7).
+-Approximate average barometric pressure(mb)over period of run		(990.)
+-Estimated solar radiation: 2=estimate missing values only 1=yes 0=no	(0)
+-Estimated incident long wave radiation: 2=estimate missing values only (0)
+					1=yes 0=no
+-Sloped terrain: 1=yes 0=no						(0)
+-Snow compacted (tank tracks):  Currently disabled, must be 0		(0)
+-Near IR extinction coefficient for top snow node			(400.)
+-Optional input of measured temperature data 1=yes 0=no			(0)
+-Optional print-out of water infiltration estimates 1=yes 0=no		(0)
+	Note: This option may generate extensive output
+-Basic time period in seconds (determined by time-step of MET data)	(3600.)
+-Estimate standard MET data from user-supplied routine: 1=yes 0=no	(0)
+-*Snow albedo	>=1 compute albedo	<1 use constant input value	(1.78)
+-Irreducible water saturation for snow					(0.04)
+-*New snow density: 0=read from met file  >950=compute from Alta algorithm  	
+	Else use fixed input value.   A minus sign in conjunction 	(80.)
+	with options 2 and 3 will read a met file value but override it.
+-*Density limit for settling compaction					(100.)
+-*Correction for stable conditions  0=turn-off  1=turn-on  		(2)
+				    2=set max Richardson number at 0.16	
+-*Turbulent transfer routine  Any number-No longer an option 		(2)
+-*Viscosity coefficient							(0.9d6)
+
+
+
+LINE READ 2: Measurement heights above ground surface for MET data in meters.  
+-Air temp height, wind speed height, dewpoint or RH height		(2.,2.,2.)
+
+LINE READ 3: Specification of characteristics for each layer type. 
+
+Since layers number inascending order, BEGIN WITH THE LOWEST LAYER FIRST. 
+For some stock material types, many of the characteristics are automacally supplied from a 
+database within the model as shown in Table 1. Codes for materials crrently catalogued in 
+the model are:
+
+1=snow 2=clay 3=sand (90..99)= user supplied material
+
+Enter the following items, one line per layer type.  User defined properties are read at Line 
+5).
+
+-Number of nodes (if > 70, increase parameter nd in file const)		(Integer)
+-Material code								(Integer)
+-Quartz content								(0.0-0.45)
+-Roughness length or 999.						(.001-.005 for snow)
+-Bulk transfer coefficient for eddy diffusivity or 999.			(999.)
+-Cd/Ce									(1.0)
+-Cd/Ch									(1.0)
+-Windless convection coefficient for latent heat			(0.0 for snow)
+-Windless convection coefficient for sensible heat			(1.0 - 2.0 for snow)
+-Fractional humidity relative to saturated state			(1.0 For snow, <1.0 for soil)
+
+The remainder of this file is unchanged from the original User's Guide.
+
+
+Following is an example of the revised LINE READ 1 of the LAYER.IN file.
+
+2,6,1,990.,0,0,0,0,400.,0,0,3600.,0,1.78,0.04,999.,100.,2,2,0.9d6,ln,pinv,
+ifluxout,bp,isolarcalc,ircalc,islope,itracks,bext,itm,ioutfiltrate,dtbase, 
+imetcalc,albsnow,ssisnow,bifallin,dmlimit,istboff,iqturb,eta0
+
+Variable computation of albedo is indicated by albsnow = 1.78 (> 1.0).
+Computation of the new snow density is triggered by bifall = 999. (> 950.).
+The settling compaction limit dmlimit is 100 kg/m3.
+The stability correction for stable conditions has a minimum lower limit 
+The viscosity coefficient is 0.9d6 kg-s/m2.
+
+B. Other changes to the code.
+
+The upper limit on the grain growth algorithm has been increased from 3mm 
+to 5mm, and the lower limit on the algorithm for estimating the grain size of 
+new snow has been decreased from 400 microns to 25 microns.  Since grain 
+size is critical when computing albedo, it is recommended that both the new 
+snow density and grain size be estimated if the variable albedo option is 
+selected and the data set contains multiple snow events. The new snow grain 
+size algorithm is triggered by stating the grain size as 0.0 in the MET.IN file. 
+Debugging changes have been made in the procedures for handling wet snow 
+storms. 
+
+The routine for generating the SNOW.OUT file has been expanded to 
+print out information on the new options, plus it echoes other input 
+information not printed out before.
+
+There have been minor debugging changes to the code, some of which 
+corrected problems experienced by very strict compilers.
+
+
+C. Changes to the User's Guide. 
+
+In addition to the three new parameters in LINE.READ 1 of the LAYER.IN 
+file and the different default values for melting snow, there are the following 
+changes.
+
+The terminology of 'Turbulent Schmidt number' and 'Turbulent 
+Prandtl number' is incorrect. More accurate descriptions are respectively:
+'ratio of neutral stability bulk turbulent transfer coefficients of momentum 
+and latent heat (Cd/Ce)' and 'ratio of neutral stability turbulent transfer 
+coefficients of momentum and sensible heat (Cd/Ch).' 
+
+THE PRECIPITATION RATE IS NOW ENTERED IN THE MET FILE IN 
+M/HR OF SNOW WATER EQUIVALENT UNITS, instead of in m/hr of 
+snow accumulation
+
+If 0.0 is input for bifallin, new snow densities will be read from the MET.IN 
+file. The column for this parameter should be inserted after that for new grain 
+size.  If bifallin is <0.0, the new snow density will be read from the met file
+but overridden.
+
+Cloud type 5 in the MET.IN file is disallowed.
+
+
+D. References
+
+Anderson, E.A. (1976) A point energy and mass balance model of a snow 
+cover, Office of Hydrology, National Weather Service, Silver Springs, 
+Maryland, NOAA Technical Report NWS 19.
+
+Brun, E., et al. (1989) An energy and mass model of snow cover suitable for 
+operational avalanche forecasting, Journal of Glaciology, p. 333-342, 35,21.
+ 
+Jordan, R. (1992) Estimating turbulent transfer functions for use in energy 
+balance modeling, Internal Report 1107, U. S. Army Cold Regions Research 
+and Engineering Laboratory, Hanover, N. H.
+
+Jordan, R. (1991) A one-dimensional temperature model for a snow cover: 
+Technical documentation for SNTHERM.89, Special Report 91-16,, U. S. 
+Army Cold Regions Research and Engineering Laboratory, Hanover, N. H.
+
+La. Chapelle, E. (1961) Alta Avalanche Study Center, Project F, Progress 
+Report No. 1, Snow Layer Densification, U.S. Department of Agriculture 
+Forest Service, Wasatch National Forest.
+
+Marks, D. (1988) Climate, energy exchange, and snowmelt in Emerald Lake 
+Watershed, Sierra Nevada. PhD Dissertation, University of California at 
+Santa Barbara.
+
+Marshall, S. and S. Warren (1987) Parameterization of snow albedo for 
+climate  models, in Large Scale Effects of Seasonal Snow Cover, ed. by B. 
+E. Goodison, R. G. Barry and J. Dozier, IAHS Publication No. 166, pp. 43-
+50, International Association of Hydrological Sciences, Wallingford, UK.
+
+North Pacific Division,U.S. Army Corps of Engineers (1956) Snow 
+Hydrology, Summary Report of the Snow Investigations.
+
+

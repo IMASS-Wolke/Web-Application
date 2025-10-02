@@ -1,0 +1,438 @@
+This file keeps a running list of changes made to the code.
+
+......................................................................
+getmet.f
+
+cNov13,1995     double precision albm,bwfall,cosd,cosz,cosazi,coselv
+      double precision albm,cosd,cosz,cosazi,coselv
+......................................................................
+newsnow.f
+
+cNov13,1995      double precision ssisnow,blfall,a1snow,bwfall,binew(nd)
+      double precision ssisnow,blfall,a1snow,bwfall
+......................................................................
+sntherm.f
+
+cNov14,1994 if(icalcstep .gt. 400000 .or.(jday .gt. 126 .and. iy .gt. 1))stop
+
+......................................................................
+getmet.f
+
+c Next line commented out on Nov 20,1995. Left in by mistake.
+c           dsnowfall = 0d0
+
+          if(bifallin .gt. 0d0)then
+            read(88,*,end=999)iy,jday,ihour,imin,
+     &           tkair,rh,wsp,(rad(i),i=1,3),prcp,iptype,dsnowfall
+          else
+c Next lines added on Nov 21, 1995
+            read(88,*,end=999)iy,jday,ihour,imin,
+     &           tkair,rh,wsp,(rad(i),i=1,3),prcp,iptype,dsnowfall,
+     &           bwfall
+          endif 
+
+cNov28,95 & dsnowfall,effceiling,elev,tlsnow,tm,tmsg,albsnow,bwfall,blfall,
+c    & binew)
+     & dsnowfall,effceiling,elev,tlsnow,tm,tmsg,albsnow,bwfall,blfall)
+......................................................................
+write.f
+
+c April 7, 1996
+c     else
+      else if(istboff .eq. 0)then
+        write(80,*)'     Stability Correction for Stable Conditions is',
+     & ' On.'
+c April 7, 1996
+      else
+        write(80,*)'     Stability Correction for Stable Conditions has' 
+     & ,' a minimum.'
+      endif
+......................................................................
+qturb.f   Replaced with qturb3.f in Nov, 1996
+
+c April 7, 96  double precision ri,phihr,phiwr,phimr,htemp,hwsp,hrh,dum,rb
+      double precision ri,phihr,phiwr,phimr,htemp,hwsp,hrh,dum,rb,dum1
+
+c  Next 5 lines added on April 7, 1996
+c  Changed again on June 25, 1996
+      if(istboff .eq. 2)then
+c      dum=1d0/(1d0+12.5d0*dsqrt(cd))
+c      dum1=1d0/(1d0+12.5d0*ch/dsqrt(cd))
+c      rb=dmin1(rb,(1d0-dsqrt(dum*dum1))/5d0)
+c June 25, 1996
+       rb=dmin1(rb,0.16d0)
+      endif
+      ri=rb
+......................................................................
+qturb2.f   Replaced with qturb3.f in Nov, 1996
+
+c April 7, 96  double precision ri,phihr,phiwr,phimr,htemp,hwsp,hrh,dum,rb
+      double precision ri,phihr,phiwr,phimr,htemp,hwsp,hrh,dum,rb,dum1
+
+c  Next 5 lines added on April 7, 1996
+c  Changed again on June 25, 1996
+      if(istboff .eq. 2)then
+c      dum=1d0/(1d0+12.5d0*dsqrt(cd))
+c      dum1=1d0/(1d0+12.5d0*ch/dsqrt(cd))
+c      rb=dmin1(rb,(1d0-dsqrt(dum*dum1))/5d0)
+c June 25, 1996
+       rb=dmin1(rb,0.16d0)
+      endif
+      ri=rb
+......................................................................
+sntherm.f (MAIN)
+c April 24, 1996 else
+        elseif(solar .le. 0d0)then
+c April 24, 1996        do 112 i=n+1-nn(ln),n+1
+        do 112=1,n+1
+           dsol(i)=0d0
+112     continue
+c April 24, 1996  IMPORTANT CHANGE for bare soil case
+        else
+           dsol(n)=solar
+      end if
+......................................................................
+sntherm.f (MAIN)
+cMay15, 1996         if(d(i) .gt. 3d-3)d(i)=5d-3
+         if(d(i) .gt. 5d-3)d(i)=5d-3
+......................................................................
+flux.f
+
+cJune 25, 1996      dqest=solar+dlong+hg+sensheat+dlatheat
+      dqest=solar+dlong+2d0*hg+sensheat+dlatheat
+cJune 25,1996  write(7,945)iy,jday,ihour,imin,dqest,solar,dlong,hg,
+         write(7,945)iy,jday,ihour,imin,dqest,solar,dlong,2d0*hg,
+cJune 25, 1996         write(7,928)ihour,imin,dqest,solar,dlong,hg,
+         write(7,928)ihour,imin,dqest,solar,dlong,2d0*hg,
+cJune 25, 1996  write(7,45)iy,jday,ihour,imin,dqest,solar,dlong,hg,sensheat,
+        write(7,45)iy,jday,ihour,imin,dqest,solar,dlong,2d0*hg,sensheat,
+cJune 25, 1996 write(7,28)ihour,imin,dqest,solar,dlong,hg,sensheat,dlatheat
+        write(7,28)ihour,imin,dqest,solar,dlong,2d0*hg,sensheat,dlatheat
+......................................................................
+sntherm.f (MAIN)
+
+c June 25, 1996
+         if(ltype(k(i)) .gt.1)then
+            ddzdtp(i)=0d0
+            pdzdtc(i)=0d0
+         endif
+
+c June 25, 1996
+        if(dz(n) .lt. 0d0)idelete(n)=1
+
+**********************************************************************
+The following changes were implemented on the ftp-site on November 20,
+1996.
+IMPORTANT CHANGE. Routines qturb and qturb2 are replaced with qturb3.
+ Changes in qturb3 and calconstant now correctly compute turbulent
+ transfer parameters for met measurements at different levels.
+**********************************************************************
+......................................................................
+calconstant.f  Final implementation on 11/20/1996
+c  (Coefficients for transfer over snow are computed in QTURB)
+             dlogWt(j)=dlog(height(1)/znaught(j))
+             dlogWw(j)=dlog(height(2)/znaught(j))
+             sqrtCdn(j)=.4d0/dlogWt(j)
+             Cd(j)=sqrtCdn(j)*sqrtCdn(j)
+
+             sqrtCdn(j)=dsqrt(Cd(j))
+             dlogWt(j)=.4d0/sqrtCdn(j)
+             znaught(j)=height(1)*dexp(-dlogWt(j))
+             dlogWw(j)=dlog(height(2)/znaught(j))
+
+          Ch(j)=cd(j)/rch(j)
+          Ce(j)=cd(j)/rce(j)
+          dlogQt(j)=0.4*sqrtCdn(j)/Ce(j)
+          dlogQq(j)=dlog(height(3)/height(1))+dlogQt(j)
+          dum=sqrtCdn(j)/(11.315736 + 1.0/sqrtCdn(j))
+          if(Ch(j) .lt. dum .and. Ce(j) .lt. dum)then
+           xlimitd(j)=(8.* dexp((.2/sqrtCdn(j))+1.57)  )**.25
+          else if( Cen .gt. Chn)then
+           xlimitd(j)=(4.* dexp(.2*sqrtCdn(j)/Ce(j))  )**.25
+          else
+           xlimitd(j)=(4.* dexp(.2*sqrtCdn(j)/Ch(j))  )**.25
+          endif
+......................................................................
+combinenodes.f  Final implementation on 11/20/1996 
+
+c Nov 5, 1996      if( ((dzo(i) .lt. dzmin .or. dmass(i) .lt. 100d0*dzmin )
+         if( ((dzo(i) .lt. dzmin .or. dmass(i) .lt. 80d0*dzmin )
+
+c Nov 5, 1966
+                  istart=1
+......................................................................
+converge.f  Final implementation on 11/20/1996
+c November 13, 1996. Set minimum on qs for top node.  Increases accuracy
+c of temperature prediction-important for stability correction.
+            dt=dmin1(qs(n)*dto/4d0,dt)
+......................................................................
+flux.f  Note: These are all new output options.  Final implementation
+        on 11/20/96 
+
+     &  imin,isolarcalc,effceiling,islope,ffmt)
+
+c July 10 1996 - added bert's output format  (jcm)
+c ffmt: format type 1=default -1=bert's
+
+      integer ffmt
+
+c July 10 1996 - added bert's output format  (jcm)
+
+      double precision dtime
+
+      if(ffmt .eq. 2) then
+
+         dqest=solar+dlong+2d0*hg+sensheat+dlatheat
+         dtime=jday + (ihour / 24.0) + (imin / 60.0)
+
+         write(7,2)dtime,solar,dlong,sensheat,dlatheat,2d0*hg,dqest
+ 
+2        format(f8.4,2x,6(f6.1,6x))
+         goto 10
+
+      endif
+
+10    return
+......................................................................
+getinput.f  Final implementation on 11/20/96
+   Note: The following are new output options 
+
+     &     dznm,fnm,ssisnow,frh,bifallin,dmlimit,istboff,iqturb,eta0,
+     &     exp1)
+
+c  July 8 1996 - added experimental parameter  (jcm)
+      double precision exp1
+
+c  July 8 1996 - changed track parameters to experemental parameters  (jcm)
+c      if(itracks.gt.0)read(90,*)iy2,jday2,ihour2,ctrack,trwidth,
+c     &   trdepth,orientation
+      if(itracks.eq.2) then
+	read(90,*)exp1
+      else
+	exp1 = 999.0
+      endif
+......................................................................
+getmet.f  Final implementation on 11/20/1996
+
+     & dsnowfall,effceiling,elev,tlsnow,tm,tmsg,albsnow,bwfall,blfall,
+     & exp1)
+
+c  July 8 1996 - added experemental parameter  (jcm)
+      double precision exp1
+
+c July 8 1996 - added experimental parameter (jcm)
+c
+        fvis=exp1
+	if (fvis .gt. 1.0)then
+		fvis=0.436d0 + 0.149*(1d0-clearness)
+	endif
+
+c Nov 19,1996            if(bifallin .gt. 950d0)then
+            if(dabs(bifallin) .gt. 950d0)then
+
+c Nov 19, 1996             else if(bifallin .gt. 0d0)then
+             else
+
+c Nov 19, 1996
+            else if(dabs(bifallin) .gt. 1d-7)then
+             bifall=dmax1(dabs(bifallin),30d0)
+
+c Nov 5, 1996          if(dabs(snowrateo).lt. 1d-15)istart=1
+            if(dabs(snowrateo).lt. 1d-15 .or. ltype(k(n)) .gt. 1)
+     &         istart=1
+
+c Nov 19, 1996         if(bifallin .gt. 0d0)then
+         if(dabs(bifallin) .gt. 1d-7)then
+
+c Nov 19, 1996.  Set minimum new snow density to 30 kg/m3
+         bwfall=dmax1(bwfall,30d0)
+
+......................................................................
+sntherm.f  Most of these changes regard the new print-out options and
+    revised calls to qturb3.f.  Final implementation on Nov 20, 1996.
+
+      integer imetcalc,imin,istboff,iqturb
+c July 10 1996 - commented out iar to remove compiler warning message
+c     integer iar
+
+c added extra stuff to next on 9/16/96
+      double precision floo(nd),dzoo(nd),ratio,Rbo,TsurfEst
+c July 8 1996 added write format variable (ceretha)
+      integer writefmt
+c July 8 1996 added expermential parameter exp1 (ceretha)
+      double precision exp1
+c Sept 9 1996 added variables for water output (ceretha)
+      double precision meltflux, uosave
+
+c July 8 1996 added expermential parameter exp1 (ceretha)
+
+     &     dznm,fnm,ssisnow,frh,bifallin,dmlimit,istboff,iqturb,eta0,
+     &     exp1)
+
+c
+c July 26 1996 use ifluxout as output format variable (ceretha)
+c
+       writefmt = ifluxout/10
+       ifluxout = ifluxout - (writefmt * 10)
+
+
+c July 8 1996 added expermential parameter exp1 (ceretha)
+     & dsnowfall,effceiling,elev,tlsnow,tm,tmsg,albsnow,bwfall,blfall,
+     & exp1)
+
+c  July 8 1996 - commented out next lines (ceretha)
+c      if(itracks .eq. 0 .or. iy2 .ne. iy)goto45
+c      if(jday2.eq.jday .and.ihour2.eq.ihour)then
+c         do 375 i=nsoil+1,n
+c            if(bi(i).lt.0.917d3 .and. ltype(i) .eq.1)pdzdtc(i)=
+c     1      (ctrack-1)/dt
+c 375     continue
+c         itrklaid=1
+c      end if
+
+c Nov. 20, 1996. Nodal array size check
+      if(n .gt. nd-1)stop 'Increase nodal array size nd in "const"'
+
+c    First estimate new surface temperature, for a better computation
+c    of the Richardson number. Added in Nov, 1996.
+       if(icalcstep.le.1 .or. melt(n).eq.1 .or. dabs(u(n+1)).gt.0d0
+     &  .or. thinnode)then
+        if(thinnode .and. prcp .gt. 0d0)then
+         TsurfEst=Tprecip
+        else
+         TsurfEst=To(n)
+        endif
+       else 
+        if(wspo .ne. 0d0)then
+         qsen=(qsen-csk(m))*wsp/wspo + csk(m)
+         qlat=(qlat-ck(m))*wsp/wspo + ck(m)
+        endif
+        topfluxk=(em(m)*dirdown+qsen*tkair+qlat*(ea+frh(m)*eso*
+     &    21.452d0)+3d0*em(k(n)) *sbt3o*to(n))/2d0
+        topfluxv=-(qsen+frh(k(n))*22.452d0*eso*qlat/to(n)+4d0*em(k(n))
+     &    *sbt3o)/2d0
+        dum=qs(n)*dto/dt
+        TsurfEst=(dum*To(n)+.5d0*dsol(n)+topfluxk+bbo(n)
+     &   -heatfluxbtop)/(dum-topfluxv)
+c       Limit temperature change to 5 degree/hour.
+        if(Tsurfest .gt. To(n))TsurfEst=dmin1(TsurfEst,To(n)+dt/720.)
+        if(Tsurfest .lt. To(n))TsurfEst=dmax1(TsurfEst,To(n)-dt/720.)
+       endif
+       call qturb3(height,tkair,TsurfEst,wsp,qlat,qsen,csk(m),
+     &   dliqvol(n),cdryair,ce(m),
+
+     2   cd(m),rhoair,bp,istboff,ratio,1,icalcstep,wspo,Rbo,
+     3   sqrtCdn(m),dlogWt(m),dlogww(m),dlogQt(m),dlogQq(m),xlimitd(m))
+
+c Nov 5, 1996
+        if(dmass(n) .lt. 80d0*dzmin)iskip(n)=1
+
+c Nov 5, 1996
+        if(dmass(n) .lt. 80d0*dzmin)thinnode=.true.
+
+c July 10 1996 - added Bert's flux format (ceretha)
+         if(ifluxout .ne. 0)call flux(jday,ihour,ibasestep,iptype,
+     &    height,iy,clearness,imin,isolarcalc,effceiling,islope,
+     &    ifluxout)
+
+      call qturb3(height,tkair,t(n),wsp,qlat,qsen,csk(m),dliqvol(n),
+
+     1  ch(m),rw,ck(m),snowdepth,ltype(m),rce(m),rch(m),znaught(m),
+     2   cd(m),rhoair,bp,istboff,ratio,2,icalcstep,wspo,Rbo,
+     3   sqrtCdn(m),dlogWt(m),dlogWw(m),dlogQt(m),dlogQq(m),xlimitd(m))
+
+c July 10 1996 - added Bert's flux format (ceretha)
+      if((iter.eq.0 .or. print) .and. ifluxout .ne. 0)call flux
+
+     & effceiling,islope,ifluxout)
+
+c Sept 9 1996 - added water output variables (ceretha)
+	 uosave=uo(nsoil+1)
+
+c Sept 9 1996 - added variables for water output (ceretha)
+
+1000  meltflux=meltflux + 0.5 * (uosave + uo(nsoil+1)) * dto
+
+c
+c July 8 1996 added option to write shortened output format (ceretha)
+c
+	 if (writefmt .eq. 0)then
+
+	 else if (writefmt .ge. 2)then
+	  call write2(pinv,ibasestep,imin,ihour,iy,jday,icalcstep,
+     &	      meltflux,writefmt)
+	 endif
+
+      meltflux=0d0
+......................................................................
+thermal.f  Final implementation on Nov 20, 1996.
+c Nov 12, 1996     if(dmass(n) .gt. 1d2*dzmin)then
+      if(dmass(n) .gt. 0.8d2*dzmin)then
+......................................................................
+write.f  Final implementation on Nov 20, 1996.
+c Nov 19, 1996
+      write(80,*)'     Corrections are Computed in QTURB3 (Nov, 1996)' 
+
+......................................................................
+arrays  Final implementation on Nov 20, 1996.
+c Nov 18, 1996
+      double precision sqrtCdn(ld),dlogWt(ld),dlogWw(ld),dlogQt(ld),
+     & dlogQq(ld),xlimitd(ld)
+
+c Nov 18,1996
+     &sqrtCdn,dlogWt,dlogWw,dlogQt,dlogQq,xlimitd,
+
+......................................................................
+Makefile:  This is a new Makefile.  Nov. 20, 1996
+
+END of Nov. 20, 1996 changes
+......................................................................
+getmet.f
+
+cNov27,1996      double precision sqrtr, costheta,fvis,albvis,albnir,adjust
+      double precision sqrtr, fvis,albvis,albnir,adjust
+---
+cNov27,1996        dum=1d0/dsqrt(3d0)
+        dum=0.57735026918963
+---
+cNov27,1996    costheta=cosz
+--
+cNov 27, 1996    costheta=cosz*coselv+sinz*sinelv*cosazi
+---
+cNov27,1996 Add change in direct/diffuse ratio for slope.adjust=cosz-costheta
+               adjust= (1.-fdiffuse)*(cosz - dum)
+               if(directslope .gt.0.)adjust=adjust+
+     &          (directslope/sdown)*(dum-cosz*coselv-sinz*sinelv*cosazi)
+---
+c              Next is albedo corrected for slope. Added limit on Nov 27, 1996
+	        albm=dmin1((fvis*albvis + (1d0-fvis)*albnir),1d0)
+---
+c               costheta=cosz*coselv+sinz*sinelv*cosazi
+cNov27,1996 Add change in direct/diffuse ratio for slope.adjust=cosz-costheta
+               adjust= (1.-fdiffuse)*(cosz - dum)
+               if(directslope .gt.0.)adjust=adjust+
+     &          (directslope/sdown)*(dum-cosz*coselv-sinz*sinelv*cosazi)
+---
+     &    alb(k(n))=dmin1((fvis*albvis + (1d0-fvis)*albnir),1d0)
+cDec11,1996           almb=alb(k(n))
+           albm=alb(k(n))
+......................................................................
+IMPORTANT NOTICE:  SNTHERM.f was inadvertantly overwritten by the '99'
+version on June 12,2000.  The correct version was restored on 25 Sept,
+2000.
+......................................................................
+thrk.f
+
+c Jan 3,2002        if(icoarse .eq. 2)dke = dlog10(satw) + 1.0
+         if(icoarse .ne. 1)dke = dlog10(satw) + 1.0
+
+c Next added on Jan 3,2002
+         dke=dmax1(dke,0d0)
+         dke=dmin1(dke,1d0)
+
+.........................................................................
+c 2 August 2005
+
+Major changes have been made to the getmet.f and qturb.f subroutines.
+
+........................................................................

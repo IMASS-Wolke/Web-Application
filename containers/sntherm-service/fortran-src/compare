@@ -1,0 +1,14 @@
+#!/bin/sh
+
+rm diffrun
+
+for i in *.f
+do
+echo $i >> diffruntest
+#diff /home/rachel/soiltherm5/Jun26c.2001/$i $i >> diffrun
+#diff /home/rachel/soiltherm5/JJworkdir.July3/$i $i >> diffrun
+#diff /home/rachel/REPOSV8/JJ.intv8/$i $i >> diffrun
+diff /home/rachel/ftptest/$i $i >> diffruntest
+#diff /home/rachel/JJ.ver7/$i $i >> diffrun
+
+done
