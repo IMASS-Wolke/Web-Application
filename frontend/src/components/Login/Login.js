@@ -83,6 +83,7 @@ function Login() {
           </div>
           <button className="Login-button" type="submit">Sign in</button>
         </form>
+      {/*
       <div className="Login-divider">
         <div className="divider"/>
         <text className="or-text">or</text>
@@ -98,6 +99,7 @@ function Login() {
             onError={ () => console.log("Login failed") }
           />
         </div>
+        */}
         <div>
             <text className="Create-account-header">New here? </text>
             <Link className="Create-account-button" to="/signup">Create an account</Link>

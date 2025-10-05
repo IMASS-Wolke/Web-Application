@@ -4,7 +4,7 @@ function Home() {
   return (
     <div className="Home">
       <header className="Home-header">
-        THIS IS LANDING PAGE
+        Welcome to IMASS
       </header>
     </div>
   );
