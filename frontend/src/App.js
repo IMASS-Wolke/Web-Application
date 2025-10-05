@@ -10,7 +10,7 @@ import Login from "./components/Login/Login.js";
 import Signup from "./components/Signup/Signup.js";
 
 // import models
-import FAAST from "./components/Models/FAAST/FAAST.js";
+import Fasst from "./components/Models/FASST/FASST.js";
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
           <Route path="/home" element={ <Home />} />
           <Route path="/login" element={ <Login /> } />
           <Route path="/signup" element={ <Signup /> } />
-          <Route path="/faast" element={ <FAAST /> } />
+          <Route path="/fasst" element={ <Fasst /> } />
           <Route path="*" element={ <h1>404 Error</h1> } />
         </Routes>
       </main>
