@@ -20,7 +20,7 @@ namespace IMASS.Services
             try
             {
                 var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
-                var response = await _httpClient.PostAsync($"{fasstApiUrl}/api/fasst/run", null);
+                var response = await _httpClient.PostAsync($"{fasstApiUrl}/api/Fasst/run-fasst", null);
                 
                 if (response.IsSuccessStatusCode)
                 {
@@ -47,7 +47,7 @@ namespace IMASS.Services
             try
             {
                 var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
-                var response = await _httpClient.GetAsync($"{fasstApiUrl}/api/fasst/outputs");
+                var response = await _httpClient.GetAsync($"{fasstApiUrl}/api/Fasst/outputs");
                 
                 if (response.IsSuccessStatusCode)
                 {
@@ -70,7 +70,7 @@ namespace IMASS.Services
             try
             {
                 var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
-                var response = await _httpClient.GetAsync($"{fasstApiUrl}/api/fasst/outputs/{filename}");
+                var response = await _httpClient.GetAsync($"{fasstApiUrl}/api/Fasst/outputs/{filename}");
                 
                 if (response.IsSuccessStatusCode)
                 {
