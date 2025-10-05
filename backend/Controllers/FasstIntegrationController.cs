@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using IMASS.Services;
+using System.Net.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace IMASS.Controllers
 {
@@ -9,11 +11,19 @@ namespace IMASS.Controllers
     {
         private readonly IFasstApiService _fasstApiService;
         private readonly ILogger<FasstIntegrationController> _logger;
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public FasstIntegrationController(IFasstApiService fasstApiService, ILogger<FasstIntegrationController> logger)
+        public FasstIntegrationController(
+            IFasstApiService fasstApiService, 
+            ILogger<FasstIntegrationController> logger,
+            HttpClient httpClient,
+            IConfiguration configuration)
         {
             _fasstApiService = fasstApiService;
             _logger = logger;
+            _httpClient = httpClient;
+            _configuration = configuration;
         }
 
         [HttpPost("run")]
@@ -62,6 +72,29 @@ namespace IMASS.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error getting output: {filename}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet("outputs/{filename}/stream")]
+        public async Task<IActionResult> GetOutputStream(string filename)
+        {
+            try
+            {
+                var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
+                var response = await _httpClient.GetAsync($"{fasstApiUrl}/api/fasst/outputs/{filename}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var stream = await response.Content.ReadAsStreamAsync();
+                    return File(stream, "text/plain", filename);
+                }
+                
+                return NotFound($"File {filename} not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error streaming output: {filename}");
                 return StatusCode(500, "Internal server error");
             }
         }
