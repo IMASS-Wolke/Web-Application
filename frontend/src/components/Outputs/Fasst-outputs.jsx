@@ -1,4 +1,4 @@
-import data from "../../assets/converted-outputs/faast.json";
+import data from "../../assets/converted-outputs/fasst.json";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
