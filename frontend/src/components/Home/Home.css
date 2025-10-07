@@ -1,14 +1,23 @@
 .Home {
     text-align: center;
 }
-  
+
 .Home-header {
-    background-color: #010409;
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     font-size: calc(10px + 2vmin);
     color: white;
-}  
+    border-top: solid #3d444d 2px;
+    padding-bottom: 25px;
+    padding-top: 25px;
+}
+
+.Upload-container {
+    width: 550px;
+    border-top: solid #3d444d 2px;
+    border-bottom: solid #3d444d 2px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
