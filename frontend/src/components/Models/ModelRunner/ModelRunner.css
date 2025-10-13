@@ -1,0 +1,53 @@
+.upload-container {
+  max-width: 600px;
+  margin: 50px auto;
+  text-align: center;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: white;
+}
+
+.upload-container h2 {
+  margin-bottom: 20px;
+}
+
+.input-group {
+  margin: 15px 0;
+}
+
+input[type="file"],
+input[type="text"] {
+  width: 80%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #1a1a1a;
+  color: white;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background-color: #238636;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #2ea043;
+}
+
+.upload-status {
+  margin-top: 15px;
+  font-style: italic;
+}
+
+.results {
+  margin-top: 25px;
+  background: #222;
+  border-radius: 8px;
+  padding: 15px;
+}
