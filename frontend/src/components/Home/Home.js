@@ -1,6 +1,7 @@
 import './Home.css';
 
 import Upload from '../Upload/Upload.js';
+import ModelRunner from "../Models/ModelRunner/ModelRunner.js";
 
 function Home() {
   return (
@@ -9,7 +10,8 @@ function Home() {
         Welcome to IMASS
       </header>
       <div className="Upload-container">
-        <Upload />
+        {/*<Upload />*/}
+        <ModelRunner />
       </div>
     </div>
   );

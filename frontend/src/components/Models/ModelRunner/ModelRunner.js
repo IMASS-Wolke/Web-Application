@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./ModelRunner.css";
+import downloadLogo from "../../../assets/icons/download.svg";
 
 function ModelRunner() {
   const [model, setModel] = useState("SNTHERM");
@@ -102,14 +103,13 @@ function ModelRunner() {
 
   return (
     <div className="upload-container">
-      <h2>IMASS Model Runner</h2>
-
       <div className="input-group">
-        <label>Select Model:</label>
-        <select value={model} onChange={(e) => setModel(e.target.value)} className="upload-dropdown">
+        <label className="model-selector-title">Select Model:</label>
+        <select className="model-selector" value={model} onChange={(e) => setModel(e.target.value)}>
           <option value="SNTHERM">SNTHERM</option>
-          <option value="FAAST">FAAST</option>
+          <option value="FASST">FASST</option>
         </select>
+        <button className="model-submit-button" onClick={handleRun}>Run {model}</button>
       </div>
 
       {model === "SNTHERM" && (
@@ -128,14 +128,14 @@ function ModelRunner() {
             <input type="file" onChange={(e) => setTestIn(e.target.files[0])} />
           </div>
           <div className="input-group">
-            <label>MET.SWE.IN file:</label>
+            <label>METSWE.IN file:</label>
             <input type="file" onChange={(e) => setMetSweIn(e.target.files[0])} />
           </div>
         </>
       )}
-
-      <button onClick={handleRun}>Run {model}</button>
-      <p className="upload-status">{status}</p>
+      <div className="upload-status-container">
+        <p className="upload-status">{status}</p>
+      </div>
 
       {/* SNTHERM Results */}
       {model === "SNTHERM" && result && (
@@ -155,14 +155,16 @@ function ModelRunner() {
       )}
 
       {/* FASST Results */}
-      {model === "FAAST" && (
+      {model === "FASST" && (
         <div className="results">
-          <h3>FAAST Outputs</h3>
-          <button onClick={fetchFasstOutputs}>Refresh Outputs</button>
+          <text>Fasst Output File(s)</text>
+          <button className="refresh-outputs-button" onClick={fetchFasstOutputs}>Refresh Outputs</button>
           <ul>
             {outputs.map((f) => (
-              <li key={f}>
-                {f} <button onClick={() => downloadFasstFile(f)}>Download</button>
+              <li className="files" key={f}>
+                {f} <button className="download-logo-button" onClick={() => downloadFasstFile(f)}>
+                  <img className="download-logo" src={downloadLogo} alt="Download Logo" />
+                </button>
               </li>
             ))}
           </ul>

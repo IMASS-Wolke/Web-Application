@@ -13,6 +13,7 @@ function Navbar() {
                         <span className="Navbar-title">IMASS</span>
                     </header>
                 <Link className="nav-link" to="/">Home</Link>
+                <Link className="nav-link" to="/models">Models</Link>
                 <Link className="nav-link" to="/fasst">FASST</Link>
                 </div>
                 <div className="login-signup-container">
