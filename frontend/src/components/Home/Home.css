@@ -1,5 +1,6 @@
 .Home {
     text-align: center;
+    margin-top: 50px;
 }
 
 .Home-header {
@@ -15,9 +16,10 @@
 }
 
 .Upload-container {
-    width: 550px;
+    width: auto;
+    min-width: 550px;
     border-top: solid #3d444d 2px;
-    border-bottom: solid #3d444d 2px;
+    /* border-bottom: solid #3d444d 2px; */
     padding-left: 15px;
     padding-right: 15px;
 }
