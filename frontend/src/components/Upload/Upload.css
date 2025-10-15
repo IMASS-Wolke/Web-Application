@@ -1,0 +1,82 @@
+.upload-container {
+  max-width: 600px;
+  margin: 50px auto;
+  text-align: center;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: white;
+}
+
+.upload-container text {
+  display: block;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.upload-dropdown {
+  width: 80%;
+  padding: 10px;
+  margin: 15px 0;
+  font-size: 1rem;
+  border: 1px solid #3d444d;
+  border-radius: 8px;
+  background-color: #222;
+  color: white;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.upload-dropdown:focus {
+  outline: none;
+  border-color: #1e88e5;
+  background-color: #2c2c2c;
+}
+
+.upload-dropdown:hover {
+  outline: none;
+  border-color: #1e88e5;
+  background-color: #2c2c2c;
+  cursor: pointer;
+}
+
+.dropzone {
+  border: 3px dashed #3d444d;
+  border-radius: 12px;
+  padding: 40px;
+  background-color: transparent;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dropzone.active {
+  border-color: #238636;
+  background-color: rgba(35, 134, 54, 0.1);
+}
+
+.upload-status {
+  margin-top: 15px;
+  font-weight: 500;
+  color: #ccc;
+}
+
+.file-list {
+  margin-top: 25px;
+  text-align: left;
+  padding-left: 60px;
+}
+
+.file-list h4 {
+  margin-bottom: 8px;
+  color: white;
+}
+
+.file-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.file-list li {
+  margin: 5px 0;
+  color: #ddd;
+  font-size: 0.95rem;
+}

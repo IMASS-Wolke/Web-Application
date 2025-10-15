@@ -7,14 +7,20 @@ function Navbar() {
     return (
         <div className="nav-container">
             <nav className="navbar">
-                <header className="Navbar-title-container">
-                    <img className="Navbar-logo" src={logo} alt="IMASS Logo" />
-                    <span className="Navbar-title">IMASS</span>
-                </header>
+                <div className="navlink-container">
+                    <header className="Navbar-title-container">
+                        <img className="Navbar-logo" src={logo} alt="IMASS Logo" />
+                        <span className="Navbar-title">IMASS</span>
+                    </header>
                 <Link className="nav-link" to="/">Home</Link>
-                <Link className="nav-link" to="/login">Login</Link>
-                <Link className="nav-link" to="/signup">Sign up</Link>
-                <Link className="nav-link" to="/faast">FAAST</Link>
+                <Link className="nav-link" to="/models">Models</Link>
+                <Link className="nav-link" to="/fasst">FASST</Link>
+                </div>
+                <div className="login-signup-container">
+                    <Link className="nav-link-loginsignup" to="/login">Login</Link>
+                    <div className="separator" />
+                    <Link className="nav-link-loginsignup" to="/signup">Sign up</Link>
+                </div>
             </nav>
         </div>
     );
