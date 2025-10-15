@@ -32,7 +32,7 @@
     border: 1px solid #f85149;
     border-radius: 5px;
     padding: 10px;
-    color: white;
+    color: var(--color-text);
     font-size: 15px;
     font-weight: 400;
     text-align: center;
@@ -70,7 +70,7 @@
     border: 1px solid #545e70;
     border-radius: 5px;
     padding: 10px;
-    color: white;
+    color: var(--color-text);
 }
 
 .Signup-button {
@@ -78,14 +78,16 @@
     box-sizing: border-box;
     padding: 10px;
     border-radius: 5px;
-    background-color: #238636;
-    border: #43af56 solid 1px;
+    background-color: var(--color-primary);
+    border: var(--color-primary-border) solid 1px;
     color: white;
     font-weight: 400;
 }
 
 .Signup-button:hover {
-    background-color: #29903b;
+    background-color: var(--color-primary-hover);
+    color: black;
+    transition: 0.5s;
     cursor: pointer;
 }
 

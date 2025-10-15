@@ -19,8 +19,8 @@ function ModelRunner() {
     }
 
     const formData = new FormData();
-    formData.append("TestIn", testIn);
-    formData.append("MetSweIn", metSweIn);
+    formData.append("test_in", testIn);
+    formData.append("metswe_in", metSweIn);
     if (label) formData.append("Label", label);
 
     setStatus("Running SNTHERM...");
@@ -143,7 +143,7 @@ function ModelRunner() {
           <h3>SNTHERM Results</h3>
           <p><strong>Run ID:</strong> {result.runId}</p>
           <p><strong>Exit Code:</strong> {result.exitCode}</p>
-          <button onClick={downloadSnthermZip}>Download ZIP</button>
+          <button className="sntherm-button" onClick={downloadSnthermZip}>Download ZIP</button>
 
           <h4>Output Files:</h4>
           <ul>
