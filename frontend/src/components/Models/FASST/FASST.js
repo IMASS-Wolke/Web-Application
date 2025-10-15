@@ -1,8 +1,8 @@
 import { useState } from "react";
-import FaastOutput from "../../Outputs/faast-outputs";
-import "./FAAST.css";
+import FasstOutput from "../../Outputs/Fasst-outputs";
+import "./FASST.css";
 
-function Faast() {
+function Fasst() {
     const [temperatureC, setTemperatureC] = useState("");
     const [humidity, setHumidity] = useState("");
     const [message, setMessage] = useState("");
@@ -14,7 +14,7 @@ function Faast() {
             const jobId = 123; // Hardcode ID's until further notice
             const modelId = 321; // Hardcode ID's until further notice
 
-            const response = await fetch("http://localhost:5103/api/Job/${jobId}/models/${modelId}/faast", {
+            const response = await fetch("http://localhost:5103/api/Job/${jobId}/models/${modelId}/Fasst", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -39,10 +39,10 @@ function Faast() {
     }
 
     return (
-    <div className="faast-container">
-        <h1>FAAST</h1>
-        <div className="faast-graph">
-            <FaastOutput />
+    <div className="fasst-container">
+        <h1>Fasst</h1>
+        <div className="fasst-graph">
+            <FasstOutput />
         </div>
         {/*}
         <form onSubmit={handleSubmit}>
@@ -73,4 +73,4 @@ function Faast() {
 )
 };
 
-export default Faast;
+export default Fasst;

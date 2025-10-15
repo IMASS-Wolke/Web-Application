@@ -1,13 +1,13 @@
 const fs = require("fs");
 const path = require("path");
 
-const inputPath = path.join(__dirname, "../src/assets/output-files/faast.out");
-const outputPath = path.join(__dirname, "../src/assets/converted-outputs/faast.json");
+const inputPath = path.join(__dirname, "../src/assets/output-files/fasst.out");
+const outputPath = path.join(__dirname, "../src/assets/converted-outputs/fasst.json");
 
 const raw = fs.readFileSync(inputPath, "utf8");
 const lines = raw.split(/\r?\n/).filter(line => line.trim() !== "");
 
-// FAAST structure:
+// Fasst structure:
 // line 0 → junk
 // line 1 → headers
 // line 2 → units (ignore)
