@@ -106,14 +106,16 @@
     box-sizing: border-box;
     padding: 10px;
     border-radius: 5px;
-    background-color: #238636;
-    border: #43af56 solid 1px;
+    background-color: var(--color-primary);
+    border: var(--color-primary-border) solid 1px;
     color: white;
     font-weight: 400;
 }
 
 .Login-button:hover {
-    background-color: #29903b;
+    background-color: var(--color-primary-hover);
+    transition: 0.5s;
+    color: black;
     cursor: pointer;
 }
 
