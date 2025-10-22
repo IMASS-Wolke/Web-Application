@@ -1,45 +1,66 @@
-.upload-container {
-  max-width: 600px;
-  margin: 50px auto;
-  text-align: center;
-  font-family: "Segoe UI", Arial, sans-serif;
-  color: white;
+/*** GLOBAL / SHARED STYLES ***/
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin-left: 0;
 }
 
-.upload-container h2 {
-  margin-bottom: 20px;
+button:hover {
+  background-color: var(--color-primary-hover);
+  transition: 0.5s;
+  color: black;
+  cursor: pointer;
 }
 
-.input-group {
-  font-size: 15px;
-  font-weight: 400;
+.file-name {
+  color: var(--color-success);
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+/*** FADE ANIMATION (GLOBAL) ***/
+
+.model-fade {
+  opacity: 0;
+  transform: translateY(5px);
+  animation: fadeInModel 0.4s ease forwards;
+}
+
+@keyframes fadeInModel {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*** MODEL SELECTOR DROPDOWN ***/
+
+.model-runner {
+  width: 650px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.model-selector-wrapper {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
-  white-space: nowrap;
-  margin-bottom: 0px;
-  padding-bottom: 0px;
-  border-top: solid 2px #3d444d;
-  border-left: solid 2px #3d444d;
-  border-right: solid 2px #3d444d;
-  background: #010409;
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
-}
-
-.upload-status-container {
-  background: #010409;
-  border-right: 2px solid #3d444d;
-  border-left: 2px solid #3d444d;
 }
 
 .model-selector-title {
   font-size: 18px;
-  padding-left: 15px;
 }
 
 .model-selector {
-  width: 100%;
+  width: 50%;
   height: 40px;
   padding: 10px;
   margin: 15px;
@@ -52,110 +73,179 @@
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
-.model-submit-button, .refresh-outputs-button {
-  width: 80%;
+.model-selector:hover {
+  cursor: pointer;
+}
+
+.model-divider {
+  border: 1px solid #3d444d;
+  margin-bottom: 15px;
+}
+
+/*** FASST RUNNER STYLES ***/
+
+.fasst-controls {
+  margin-bottom: 20px;
+}
+
+.fasst-run-button,
+.fasst-refresh-button,
+.fasst-download-button {
   height: 40px;
   box-sizing: border-box;
   padding: 10px;
   border-radius: 5px;
   background-color: var(--color-primary);
-  border: var(--color-primary-border) solid 1px;
+  border: 1px solid var(--color-primary-border);
   color: white;
   font-weight: 400;
+  margin-top: 10px;
 }
 
-.model-submit-button {
-  margin-right: 15px;
+.fasst-run-button,
+.fasst-refresh-button {
+  width: 350px;
 }
 
-input[type="file"],
-input[type="text"] {
-  width: 80%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #1a1a1a;
-  color: white;
-}
-
-ul {
-  list-style-type: none;
-  padding-left: 0;
-  margin-left: 0;
-}
-
-.files {
-  list-style-type: none;
+.fasst-download-button {
+  width: 65px;
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  padding-left: 15px;
-  border-bottom: 2px solid #3d444d;
+  justify-content: center;
+  align-items: center;
 }
 
-.files:last-child {
-  border-bottom: none;
-  padding-bottom: 0px;
-  margin-bottom: 0px;
+.fasst-status-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.download-logo-button {
-  width: 50px;
-  margin-right: 15px;
-  box-sizing: border-box;
-  border-radius: 5px;
-  background-color: var(--color-primary);
-  border: var(--color-primary-border) solid 1px;
-  color: white;
-  font-weight: 400;
-}
-
-.download-logo {
-  height: 35px;
-}
-
-button:hover {
-  background-color: var(--color-primary-hover);
-  transition: 0.5s;
-  color: black;
-  cursor: pointer;
-}
-
-.upload-status {
+.fasst-status {
   font-size: 15px;
   color: var(--color-success);
-  padding-top: 0px;
-  padding-bottom: 0px;
-  margin-top: 0px;
-  margin-bottom: 0px;
+  margin: 10px 0;
 }
 
-.results {
+.fasst-results,
+.fasst-outputs {
   background: #010409;
-  border-radius: 0px;
-  border-bottom: 2px solid #3d444d;
-  border-right: 2px solid #3d444d;
-  border-left: 2px solid #3d444d;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
+  border: 2px solid #3d444d;
+  border-radius: 10px;
+  margin-top: 20px;
+  padding: 15px;
+  font-size: 18px;
 }
 
-.sntherm-button {
-  width: 80%;
+.fasst-file {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #3d444d;
+  padding: 10px 0;
+}
+
+.fasst-file:last-child {
+  border-bottom: none;
+}
+
+.fasst-download-logo {
+  height: 30px;
+}
+
+/*** SNTHERM RUNNER STYLES ***/
+
+.label-input-wrapper {
+  font-size: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.label-input {
+  width: 175px;
+  height: 35px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 15px;
+  font-weight: 400;
+  border: 1px solid #3d444d;
+  border-radius: 5px;
+  background-color: #222;
+  color: white;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.label-input-title {
+  margin-right: 15px;
+}
+
+/* Dropdown Input Styles */
+.dropdown-input {
+  border: 2px dashed var(--color-border);
+  background: var(--color-surface);
+  padding: 25px;
+  border-radius: 10px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.dropdown-input:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.dropdown-input.active {
+  border-color: var(--color-primary);
+  background-color: rgba(74, 144, 226, 0.1);
+  color: var(--color-text);
+  box-shadow: 0 0 10px rgba(58, 124, 165, 0.3);
+}
+
+.dropdown-input label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+
+.sntherm-controls {
+  margin-top: 20px;
+}
+
+.sntherm-run-button,
+.sntherm-download-button {
+  width: 350px;
   height: 40px;
   box-sizing: border-box;
   padding: 10px;
   border-radius: 5px;
   background-color: var(--color-primary);
-  border: var(--color-primary-border) solid 1px;
+  border: 1px solid var(--color-primary-border);
   color: white;
   font-weight: 400;
+  margin-top: 10px;
 }
 
-.sntherm-button:hover {
-  background-color: var(--color-primary-hover);
-  transition: 0.5s;
-  color: black;
-  cursor: pointer;
+.sntherm-status-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sntherm-status {
+  font-size: 15px;
+  color: var(--color-success);
+  margin: 10px 0;
+}
+
+.sntherm-results {
+  background: #010409;
+  border: 2px solid #3d444d;
+  border-radius: 10px;
+  margin-top: 20px;
+  padding: 15px;
+  font-size: 18px;
 }
