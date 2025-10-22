@@ -9,9 +9,9 @@ function Login() {
 
   const navigate = useNavigate();
 
-  const [ username, setUsername ] = useState("");
-  const [ password, setPassword ] = useState("");
-  const [ error, setError ] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,7 +51,7 @@ function Login() {
           <img className="Login-logo" src={logo} alt="IMASS Logo" />
           <span className="Login-title">IMASS</span>
         </header>
-        <form className="Login-info" onSubmit={ handleSubmit }>
+        <form className="Login-info" onSubmit={handleSubmit}>
           {error && <div className="Login-error">
             <span>{error}</span>
             <button className="Close-error" onClick={() => setError("")}>X</button>
@@ -60,8 +60,8 @@ function Login() {
             <div className="Login-email-header">
               <text>Email Address</text>
             </div>
-            <input 
-              className="email" 
+            <input
+              className="email"
               type="email"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -73,8 +73,8 @@ function Login() {
               <text>Password</text>
               {/* <button className="Forgot-password-button">Forgot password?</button> */}
             </div>
-            <input 
-              className="password" 
+            <input
+              className="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -83,7 +83,7 @@ function Login() {
           </div>
           <button className="Login-button" type="submit">Sign in</button>
         </form>
-      {/*
+        {/*
       <div className="Login-divider">
         <div className="divider"/>
         <text className="or-text">or</text>
@@ -101,8 +101,8 @@ function Login() {
         </div>
         */}
         <div>
-            <text className="Create-account-header">New here? </text>
-            <Link className="Create-account-button" to="/signup">Create an account</Link>
+          <text className="Create-account-header">New here? </text>
+          <Link className="Create-account-button" to="/signup">Create an account</Link>
         </div>
       </div>
     </div>
