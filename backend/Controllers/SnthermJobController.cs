@@ -42,7 +42,7 @@ namespace IMASS.Controllers
             await using var s1 = req.TestIn.OpenReadStream();
             await using var s2 = req.MetSweIn.OpenReadStream();
 
-            var result = await SnthermRunner.RunAsync(image, runsRoot, s1, s2, label, TimeSpan.FromMinutes(10), ct);
+            var result = await SnthermTest.RunAsync(runsRoot, s1, s2, label, TimeSpan.FromMinutes(10), ct);
 
             return Ok(new
             {
