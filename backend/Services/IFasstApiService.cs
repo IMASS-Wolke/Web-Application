@@ -4,7 +4,7 @@ namespace IMASS.Services
 {
     public interface IFasstApiService
     {
-        Task<FasstRunResult> RunFasstAsync();
+        Task<FasstRunResult> RunFasstWithFileAsync(Stream inputFileStream, string inputFilename);
         Task<List<string>> GetOutputsAsync();
         Task<string> GetOutputAsync(string filename);
     }

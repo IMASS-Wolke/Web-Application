@@ -26,18 +26,24 @@ namespace IMASS.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost("run")]
-        public async Task<IActionResult> RunFasst()
+        [HttpPost("run-fasst")]
+        public async Task<IActionResult> RunFasstWithFile(IFormFile file)
         {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file provided");
+            }
+
             try
             {
-                var result = await _fasstApiService.RunFasstAsync();
+                using var stream = file.OpenReadStream();
+                var result = await _fasstApiService.RunFasstWithFileAsync(stream, file.FileName);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error running FASST");
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error running FASST with file");
+                return StatusCode(500, new { error = $"An error occurred: {ex.Message}" });
             }
         }
 
