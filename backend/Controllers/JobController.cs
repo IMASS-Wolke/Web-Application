@@ -37,81 +37,24 @@ namespace IMASS.Controllers
                         Name = m.Name,
                         Status = m.Status,
                     }).ToList(),
-                    ModelInstances = x.ModelInstances.Select(mi => new ModelInstance
-                    {
-                        ModelInstanceId = mi.ModelInstanceId,
-                        JobId = mi.JobId,
-                        ModelId = mi.ModelId,
-                        Status = mi.Status,
-                        InputJson = mi.InputJson,
-                        OutputJson = mi.OutputJson,
-                        CreatedAt = mi.CreatedAt,
-                        StartedAt = mi.StartedAt,
-                        FinishedAt = mi.FinishedAt
-                    }).ToList(),
 
                 })
                 .ToListAsync();
 
             return Ok(jobs);
         }
-        [HttpGet("{jobId:int}/modelInstances")]
-        public async Task<IActionResult> GetModelInstancesForJob(int jobId)
+        [HttpGet("chainId/{chainId:guid}")]
+        public async Task<IActionResult> GetJobsForChain(Guid chainId)
         {
-            var job = await _context.Jobs
-                .Include(j => j.ModelInstances)
-                .FirstOrDefaultAsync(j => j.JobId == jobId);
-            if (job == null)
+            var exists = await _context.Chains.AnyAsync(c => c.Id == chainId);
+            if (!exists)
             {
-                return NotFound(new { Message = "Job not found." });
+                return NotFound();
             }
-            var modelInstances = job.ModelInstances.Select(mi => new
-            {
-                mi.ModelInstanceId,
-                mi.JobId,
-                mi.ModelId,
-                mi.Status,
-                mi.InputJson,
-                mi.OutputJson,
-                mi.CreatedAt,
-                mi.StartedAt,
-                mi.FinishedAt
-            }).ToList();
-            return Ok(modelInstances);
+            var jobs = await _context.Jobs.Where(x => x.ChainId == chainId).Include(x => x.Models).ToListAsync();
+            return Ok(jobs);
         }
 
-        [HttpGet("{jobId:int}/models/{modelId:int}")]
-        public async Task<IActionResult> GetModelInstances(int jobId, int modelId)
-        {
-            var job = await _context.Jobs.Include(j => j.Models).FirstOrDefaultAsync(j => j.JobId == jobId);
-            if (job == null)
-            {
-                return NotFound(new { Message = "Job not found." });
-            }
-            var model = await _context.Models.FindAsync(modelId);
-            if (model == null)
-            {
-                return NotFound(new { Message = "Model not found." });
-            }
-            if (!job.Models.Any(m => m.ModelId == modelId))
-            {
-                return BadRequest(new { Message = "Model is not assigned to the specified Job." });
-            }
-            var modelInstances = await _context.ModelInstances
-                .Where(mi => mi.JobId == jobId && mi.ModelId == modelId)
-                .Select(mi => new
-                {
-                    mi.ModelInstanceId,
-                    mi.Status, //must fix here to show enum instea of null 
-                    mi.InputJson,
-                    mi.OutputJson,
-                    mi.CreatedAt,
-                    mi.StartedAt,
-                    mi.FinishedAt
-                })
-                .ToListAsync();
-            return Ok(modelInstances);
-        }
 
         [HttpPost]
         public async Task<IActionResult> CreateModel([FromBody] JobCreateDTO dto)
@@ -124,6 +67,25 @@ namespace IMASS.Controllers
             _context.Jobs.Add(job);
             await _context.SaveChangesAsync();
             return Ok(new { Message = "Job created successfully.", job.JobId });
+        }
+
+        [HttpPost("chainId/{chainId:guid}")]
+        public async Task<IActionResult> CreateJobForChain(Guid chainId, [FromBody] JobCreateDTO dto)
+        {
+            var chain = await _context.Chains.FindAsync(chainId);
+            if (chain == null)
+            {
+                return NotFound();
+            }
+            var job = new Job
+            {
+                ChainId = chainId,
+                Title = dto.Title,
+                Models = new List<Model>(),
+            };
+            _context.Jobs.Add(job);
+            await _context.SaveChangesAsync();
+            return Ok(job);
         }
 
         [HttpPost("{jobId}/assign-model/{modelId}")]

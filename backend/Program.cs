@@ -102,6 +102,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 //Seed Admin User if none exists (this comes directly from our DbSeeder class using the function)
-//await DbSeeder.SeedDataAsync(app);
+await DbSeeder.SeedDataAsync(app);
 
 app.Run();
