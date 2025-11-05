@@ -26,7 +26,7 @@ namespace IMASS.Controllers
             _configuration = configuration;
         }
 
-        [HttpPost("run-fasst")]
+        [HttpPost("run")]
         public async Task<IActionResult> RunFasstWithFile(IFormFile file)
         {
             if (file == null || file.Length == 0)
