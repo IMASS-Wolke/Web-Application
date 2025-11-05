@@ -89,7 +89,7 @@ namespace IMASS.Services
                 content.Add(streamContent, "file", inputFilename);
                 
                 // Call the FastAPI endpoint
-                var response = await _httpClient.PostAsync($"{fasstApiUrl}/run-fasst/", content);
+                var response = await _httpClient.PostAsync($"{fasstApiUrl}/run/", content);
                 
                 if (response.IsSuccessStatusCode)
                 {
