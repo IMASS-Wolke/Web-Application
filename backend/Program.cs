@@ -17,7 +17,7 @@ builder.Services.Configure<FormOptions>(o =>
     o.MemoryBufferThreshold = int.MaxValue;
 });
 // Add services to the container.
-
+builder.Services.AddScoped<IScenarioBuilder, ScenarioBuilder>();
 //Connection to PostgresSql
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
