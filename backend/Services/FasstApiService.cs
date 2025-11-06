@@ -1,4 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace IMASS.Services
 {
@@ -15,22 +22,36 @@ namespace IMASS.Services
             _logger = logger;
         }
 
+        private string BaseUrl =>
+            (_configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000").TrimEnd('/');
+
         public async Task<List<string>> GetOutputsAsync()
         {
             try
             {
-                var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
-                var response = await _httpClient.GetAsync($"{fasstApiUrl}/api/Fasst/outputs");
+                var url = $"{BaseUrl}/outputs";
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning($"FASST outputs request failed with {response.StatusCode}");
+                    _logger.LogWarning("FASST outputs request failed with {StatusCode}", response.StatusCode);
                     return new List<string>();
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
 
-                // ✅ Parse the object containing the "files" array
+                // Try array first: ["a","b"]
+                try
+                {
+                    var arr = JsonSerializer.Deserialize<string[]>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                    if (arr is not null) return arr.Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+                }
+                catch { /* fall through to object */ }
+
+                // Then object: { "files": [...] }
                 using var doc = JsonDocument.Parse(content);
                 if (doc.RootElement.TryGetProperty("files", out var filesProp))
                 {
@@ -43,7 +64,7 @@ namespace IMASS.Services
                     return files;
                 }
 
-                _logger.LogWarning("FASST outputs response did not contain a 'files' property.");
+                _logger.LogWarning("FASST outputs response did not contain a usable list of files.");
                 return new List<string>();
             }
             catch (Exception ex)
@@ -57,20 +78,21 @@ namespace IMASS.Services
         {
             try
             {
-                var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
-                var response = await _httpClient.GetAsync($"{fasstApiUrl}/api/Fasst/outputs/{filename}");
+                var safeName = Uri.EscapeDataString(filename ?? string.Empty);
+                var url = $"{BaseUrl}/outputs/{safeName}";
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadAsStringAsync();
                 }
 
-                _logger.LogWarning($"FASST output file '{filename}' returned {response.StatusCode}");
+                _logger.LogWarning("FASST output file '{Filename}' returned {StatusCode}", filename, response.StatusCode);
                 return string.Empty;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error getting output: {filename}");
+                _logger.LogError(ex, "Error getting output: {Filename}", filename);
                 return string.Empty;
             }
         }
@@ -79,42 +101,43 @@ namespace IMASS.Services
         {
             try
             {
-                var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
-                
-                // Create multipart form content with the file
+                var url = $"{BaseUrl}/run-fasst";
+
                 using var content = new MultipartFormDataContent();
-                inputFileStream.Position = 0;
+
+                if (inputFileStream.CanSeek)
+                    inputFileStream.Position = 0;
+
                 var streamContent = new StreamContent(inputFileStream);
-                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                // Field name must be "file" to match IFormFile parameter on your .NET controller and FastAPI handler
                 content.Add(streamContent, "file", inputFilename);
-                
-                // Call the FastAPI endpoint
-                var response = await _httpClient.PostAsync($"{fasstApiUrl}/run/", content);
-                
+
+                var response = await _httpClient.PostAsync(url, content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<FasstRunResult>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
-                    
-                    return result ?? new FasstRunResult();
+
+                    return result ?? new FasstRunResult { Stdout = responseContent };
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError($"Failed to run FASST. Status: {response.StatusCode}, Response: {errorContent}");
-                return new FasstRunResult 
-                { 
-                    Stderr = $"HTTP Error: {response.StatusCode} - {errorContent}" 
+                _logger.LogError("Failed to run FASST. Status: {StatusCode}, Response: {Body}", response.StatusCode, responseContent);
+                return new FasstRunResult
+                {
+                    Stderr = $"HTTP Error: {response.StatusCode} - {responseContent}"
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error running FASST with file");
-                return new FasstRunResult 
-                { 
-                    Stderr = $"Error: {ex.Message}" 
+                return new FasstRunResult
+                {
+                    Stderr = $"Error: {ex.Message}"
                 };
             }
         }
