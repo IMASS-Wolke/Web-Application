@@ -14,8 +14,6 @@ import SceneBuilder from "./components/SceneBuilder/SceneBuilder.js";
 import ModelRunner from "./components/Models/ModelRunner/ModelRunner.js";
 import Fasst from "./components/Models/FASST/FASST.js";
 
-import HealthPanel from "./components/Models/ModelRunner/Health Checker/HealthPanel.js";
-
 function App() {
   return (
     <div className="App">
