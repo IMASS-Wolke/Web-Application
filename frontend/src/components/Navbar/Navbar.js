@@ -14,7 +14,11 @@ function Navbar() {
                     </header>
                 <Link className="nav-link" to="/">Home</Link>
                 <Link className="nav-link" to="/models">Models</Link>
-                <Link className="nav-link" to="/fasst">FASST</Link>
+                <Link className="nav-link" to="/scene-builder">Scene Builder</Link>
+                {/*
+                <Link className="nav-link" to="/fasst">FASST</Link> 
+                ***Removed since no longer needed, can still manually route to /fasst to view page***
+                */}
                 </div>
                 <div className="login-signup-container">
                     <Link className="nav-link-loginsignup" to="/login">Login</Link>
