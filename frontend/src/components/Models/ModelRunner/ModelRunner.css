@@ -34,6 +34,7 @@ button:hover {
     opacity: 0;
     transform: translateY(5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -255,16 +256,32 @@ button:hover {
 
 /*** TEMP FASST ***/
 
-.fasst-charts { margin-top: 24px; }
+.fasst-charts {
+  margin-top: 24px;
+}
+
 .fasst-chart-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: 16px;
 }
+
 .fasst-chart-card {
   border: 1px solid #333;
   border-radius: 12px;
   padding: 12px;
-  background: rgba(255,255,255,0.02);
+  background: rgba(255, 255, 255, 0.02);
 }
-.fasst-chart-title { margin: 0 0 8px; }
+
+.fasst-chart-title {
+  margin: 0 0 8px;
+}
+
+.health-container {
+  background: #010409;
+  border: 2px solid #3d444d;
+  border-radius: 10px;
+  margin-top: 20px;
+  padding: 15px;
+  font-size: 18px;
+}

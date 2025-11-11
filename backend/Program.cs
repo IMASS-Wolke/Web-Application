@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+using IMASS.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<FormOptions>(o =>
 {
@@ -76,6 +78,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 
+
 // Add FASST API service
 builder.Services.AddHttpClient<IFasstApiService, FasstApiService>();
 builder.Services.AddScoped<IFasstApiService, FasstApiService>();
@@ -84,6 +87,10 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// [SignalR] register the hub services
+builder.Services.AddSignalR();
+builder.Services.AddHostedService<HealthPublisherService>();
 
 var app = builder.Build();
 
@@ -100,6 +107,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// [SignalR] map the hub endpoint
+app.MapHub<HealthHub>("/hubs/health");
 
 //Seed Admin User if none exists (this comes directly from our DbSeeder class using the function)
 //await DbSeeder.SeedDataAsync(app);

@@ -2,6 +2,9 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import "./ModelRunner.css";
 
+// Temp
+import HealthPanel from "./Health Checker/HealthPanel.js";
+
 function SnthermRunner() {
     const [label, setLabel] = useState("");
     const [testIn, setTestIn] = useState(null);
@@ -126,6 +129,10 @@ function SnthermRunner() {
                     </ul>
                 </div>
             )}
+
+            <div className="health-container">
+                <HealthPanel />
+            </div>
         </div>
     );
 }
