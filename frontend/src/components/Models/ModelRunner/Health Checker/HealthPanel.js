@@ -30,7 +30,9 @@ export default function HealthPanel() {
           <p><b>Status:</b> {payload.status}</p>
           <ul>
             {(payload.entries || []).map(e => (
-              <li key={e.name}>{e.name} — {e.status} ({Math.round(e.durationMs)} ms)</li>
+              <li key={e.name}>
+                {e.name} — {e.status} ({e.durationMs.toFixed(3)} ms)
+              </li>
             ))}
           </ul>
         </>

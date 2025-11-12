@@ -15,6 +15,8 @@ import {
   ReferenceLine
 } from "recharts";
 
+import HealthPanel from "./Health Checker/HealthPanel.js";
+
 function FasstRunner() {
   const [status, setStatus] = useState("");
   const [result, setResult] = useState(null);
@@ -360,6 +362,9 @@ function FasstRunner() {
           </div>
         </div>
       )}
+      <div className="health-container">
+        <HealthPanel title="FASST API Health" filterTag="FASST" />
+      </div>
     </div>
   );
 }
