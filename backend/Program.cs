@@ -82,6 +82,12 @@ builder.Services.AddTransient<ITokenService, TokenService>();
 // Add FASST API service
 builder.Services.AddHttpClient<IFasstApiService, FasstApiService>();
 builder.Services.AddScoped<IFasstApiService, FasstApiService>();
+builder.Services.AddHttpClient("FasstHealth", client =>
+{
+    var baseUrl = builder.Configuration["Fasst:BaseUrl"] ?? "http://localhost:8000";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 
 builder.Services.AddControllers();
 
@@ -90,7 +96,7 @@ builder.Services.AddSwaggerGen();
 
 // [SignalR] register the hub services
 builder.Services.AddSignalR();
-builder.Services.AddHostedService<HealthPublisherService>();
+builder.Services.AddHostedService<FasstHealthPublisherService>();
 
 var app = builder.Build();
 

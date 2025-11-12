@@ -129,10 +129,6 @@ function SnthermRunner() {
                     </ul>
                 </div>
             )}
-
-            <div className="health-container">
-                <HealthPanel />
-            </div>
         </div>
     );
 }
