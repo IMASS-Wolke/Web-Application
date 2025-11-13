@@ -12,11 +12,13 @@ namespace IMASS.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _config;
         private readonly IScenarioBuilder _builder;
-        public ScenarioBuilderController(IWebHostEnvironment env, IConfiguration config, IScenarioBuilder builder)
+        private readonly ApplicationDbContext _context;
+        public ScenarioBuilderController(IWebHostEnvironment env, IConfiguration config, IScenarioBuilder builder, ApplicationDbContext context)
         {
             _env = env;
             _config = config;
             _builder = builder;
+            _context = context;
         }
 
         private string GetRunsRoot()
@@ -25,31 +27,27 @@ namespace IMASS.Controllers
         }
         public sealed class RunSnthermForm
         {
-            [FromForm(Name="scenario_id")] public Guid? ScenarioId { get; set; }
-            [FromForm(Name="scenario_name")] public string ScenarioName { get; set; } = "Default Scenario";
-            [FromForm(Name="chain_name")] public string ChainName { get; set; } = "Default Chain";
-            [FromForm(Name="job_title")] public string JobTitle { get; set; } = "Default Job";
-            [FromForm(Name="test_in")] public IFormFile? TestIn { get; set; }
-            [FromForm(Name="met_swe_in")] public IFormFile? MetSweIn { get; set; }
+            [FromForm(Name = "model_name")] public string? ModelName { get; set; }
+            [FromForm(Name = "scenario_name")] public string? ScenarioName { get; set; }
+            [FromForm(Name="inputFile1")] public IFormFile? inputFile1 { get; set; }
+            [FromForm(Name="inputFile2")] public IFormFile? inputFile2 { get; set; }
         }
 
         [HttpPost("run")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> RunSntherm([FromForm] RunSnthermForm form, CancellationToken ct)
         {
-            if (form.TestIn is null || form.MetSweIn is null)
+            if (form.inputFile1 is null || form.inputFile2 is null)
             {
                 return BadRequest("Missing required files");
             }
-            await using var s1 = form.TestIn.OpenReadStream();
-            await using var s2 = form.MetSweIn.OpenReadStream();
+            await using var s1 = form.inputFile1.OpenReadStream();
+            await using var s2 = form.inputFile2.OpenReadStream();
 
 
             var (scenario, chain, job, run) = await _builder.RunModelAsync(
-                form.ScenarioId,
+                form.ModelName,
                 form.ScenarioName,
-                form.ChainName,
-                form.JobTitle,
                 s1,
                 s2,
                 GetRunsRoot(),
@@ -71,6 +69,7 @@ namespace IMASS.Controllers
             });
 
         }
+
 
 
     }

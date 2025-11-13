@@ -18,6 +18,7 @@ builder.Services.Configure<FormOptions>(o =>
 });
 // Add services to the container.
 builder.Services.AddScoped<IScenarioBuilder, ScenarioBuilder>();
+builder.Services.AddScoped<IModelRunner, ModelRunner>();
 //Connection to PostgresSql
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")

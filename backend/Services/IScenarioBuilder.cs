@@ -8,12 +8,10 @@ namespace IMASS.Services
     public interface IScenarioBuilder
     {
         Task<(Scenario scenario, Chain chain, Job job, SnthermRunResult run)> RunModelAsync(
-            Guid? scenarioId,
+            string modelName,
             string scenarioName,
-            string chainName,
-            string jobTitle,
-            Stream testIn,
-            Stream metSweIn,
+            Stream inputFile1,
+            Stream inputFile2,
             string runsRoot,
             CancellationToken ct = default
             );
@@ -21,31 +19,31 @@ namespace IMASS.Services
     public sealed class ScenarioBuilder : IScenarioBuilder
     {
         private readonly ApplicationDbContext _context;
+        private readonly IModelRunner _runners;
 
-        public ScenarioBuilder(ApplicationDbContext context)
+        public ScenarioBuilder(ApplicationDbContext context,IModelRunner runners)
         {
             _context = context;
+            _runners = runners;
         }
 
         //Create scenario
         public async Task<(Scenario, Chain, Job, SnthermRunResult)> RunModelAsync(
-                Guid? scenarioId,
+                string modelName,
                 string scenarioName,
-                string chainName,
-                string jobTitle,
-                Stream testIn,
-                Stream metSweIn,
+                Stream inputFile1,
+                Stream inputFile2,
                 string runsRoot,
                 CancellationToken ct = default)
         {
-            var scenario = await _context.Scenarios.Include(x=>x.Chains).FirstOrDefaultAsync(s => s.Id == scenarioId, ct);
-
+            var scenario = await _context.Scenarios.FirstOrDefaultAsync(s => s.Id == Guid.NewGuid(), ct);
+            int i = 1;
             if (scenario == null)
             {
                 scenario = new Scenario
                 {
                     Id = Guid.NewGuid(),
-                    Name = scenarioName,
+                    Name = scenarioName ?? $"Scenario {i++}",
                     CreatedAt = DateTime.UtcNow,
                     Chains = new List<Chain>(),
                 };
@@ -53,7 +51,8 @@ namespace IMASS.Services
             }
 
             //Create Chain
-            var chain = scenario.Chains?.FirstOrDefault(c => c.Name == chainName);
+            var chainName = "Chain 1";
+            var chain = scenario.Chains?.FirstOrDefault(c => c.Name == chainName); 
             if (chain == null)
             {
                 chain = new Chain
@@ -68,16 +67,20 @@ namespace IMASS.Services
             }
 
             //Create Job
-            var job = new Job
+            var jobTitle = "Job 1";
+            var job = chain.Jobs?.FirstOrDefault(j => j.Title == jobTitle);
+            if (job == null)
             {
-                ChainId = chain.Id,
-                Title = jobTitle,
-                Models = new List<Model>(),
-            };
-
+                job = new Job
+                {
+                    ChainId = chain.Id,
+                    Title = jobTitle,
+                    Models = new List<Model>(),
+                };
             _context.Jobs.Add(job);
-                
             await _context.SaveChangesAsync(ct);
+            }
+                
 
             //Run Model
             var sntherm = _context.Models.FirstOrDefault(m => m.Name == "Sntherm");
@@ -86,7 +89,7 @@ namespace IMASS.Services
                 sntherm = new Model
                 {
                     Name = "Sntherm",
-                    Status = "Pending",
+                    Status = "Not active",
                     Jobs = new List<Job>(),
                 };
                 _context.Models.Add(sntherm);
@@ -94,17 +97,19 @@ namespace IMASS.Services
             job.Models.Add(sntherm);
             await _context.SaveChangesAsync(ct);
 
-
             //Run Sntherm
-            var result = await SnthermTest.RunAsync(runsRoot, testIn, metSweIn, jobTitle, TimeSpan.FromMinutes(10), ct);
+
+            //_runner is the IModelRunner injected
+            //var result = await _runners.RunSnthermAsync(runsRoot, testIn, metSweIn,jobTitle, TimeSpan.FromMinutes(10), ct);
+            //var result = await SnthermTest.RunAsync(runsRoot, testIn, metSweIn, jobTitle, TimeSpan.FromMinutes(10), ct);
+            var result = await _runners.RunModelAsync(modelName, jobTitle, inputFile1, inputFile2, runsRoot, TimeSpan.FromMinutes(10), ct) as SnthermRunResult;
             if (result == null)
             {
                 throw new Exception("Model run failed.");
             }
-            _context.SnthermRunResults.Add(result);
+            sntherm.Status = result.exitCode == 0 ? "Completed" : "Failed";
             await _context.SaveChangesAsync(ct);
             return (scenario, chain, job, result);
-
         }
     }
 }
