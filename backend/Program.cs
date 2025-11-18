@@ -19,7 +19,8 @@ builder.Services.Configure<FormOptions>(o =>
     o.MemoryBufferThreshold = int.MaxValue;
 });
 // Add services to the container.
-
+builder.Services.AddScoped<IScenarioBuilder, ScenarioBuilder>();
+builder.Services.AddScoped<IModelRunner, ModelRunner>();
 //Connection to PostgresSql
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
@@ -118,6 +119,6 @@ app.MapControllers();
 app.MapHub<HealthHub>("/hubs/health");
 
 //Seed Admin User if none exists (this comes directly from our DbSeeder class using the function)
-//await DbSeeder.SeedDataAsync(app);
+await DbSeeder.SeedDataAsync(app);
 
 app.Run();
