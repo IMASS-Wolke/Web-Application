@@ -53,8 +53,8 @@ namespace IMASS.SnthermModel
                     exitCode,
                     stdOut,
                     workDir,
-                    stdErr,
                     resultsPath,
+                    stdErr,
                     results.OrderBy(n => n).ToArray());
 
         }
