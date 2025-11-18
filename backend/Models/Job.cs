@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using IMASS.SnthermModel;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations;
 
 namespace IMASS.Models
@@ -18,7 +19,9 @@ namespace IMASS.Models
 
         //Skip Navigation property 
         public List<Model> Models { get; set; }
-        public List<ModelInstance> ModelInstances { get; set; }
+        public Guid ChainId { get; set; }
+        //public Chain Chain { get; set; } = null!;
+
 
     }
 }

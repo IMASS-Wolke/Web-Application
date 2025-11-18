@@ -1,6 +1,8 @@
-﻿using IMASS.SnthermModel;
+﻿using IMASS.Data;
+using IMASS.SnthermModel;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.IO.Compression;
 
 namespace IMASS.Controllers
@@ -13,11 +15,13 @@ namespace IMASS.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _config;
+        private readonly ApplicationDbContext _context;
 
-        public SnthermJobController(IWebHostEnvironment env, IConfiguration config)
+        public SnthermJobController(IWebHostEnvironment env, IConfiguration config, ApplicationDbContext context)
         {
             _env = env;
             _config = config;
+            _context = context;
         }
         
         private string GetRunsRoot()
@@ -42,7 +46,9 @@ namespace IMASS.Controllers
             await using var s1 = req.TestIn.OpenReadStream();
             await using var s2 = req.MetSweIn.OpenReadStream();
 
-            var result = await SnthermRunner.RunAsync(image, runsRoot, s1, s2, label, TimeSpan.FromMinutes(10), ct);
+            var result = await SnthermTest.RunAsync(runsRoot, s1, s2, label, TimeSpan.FromMinutes(10), ct);
+            _context.SnthermRunResults.Add(result);
+            await _context.SaveChangesAsync(ct);
 
             return Ok(new
             {
@@ -79,6 +85,26 @@ namespace IMASS.Controllers
             }
             m.Position = 0;
             return File(m, "application/zip", $"{runId}_results.zip");
+        }
+
+        [HttpGet("runs")]
+        public async Task<IActionResult> GetRuns()
+        {
+            var runs = await _context.SnthermRunResults
+                .OrderByDescending(r => r.runId)
+                .Take(20)
+                .Select(r => new
+                {
+                    r.runId,
+                    r.exitCode,
+                    r.StandardOutput,
+                    r.StandardError,
+                    r.WorkDir,
+                    r.ResultsDir,
+                    r.Outputs,
+                })
+                .ToListAsync();
+            return Ok(runs);
         }
     }
 }
