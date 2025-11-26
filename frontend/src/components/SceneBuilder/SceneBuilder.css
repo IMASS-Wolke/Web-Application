@@ -1,51 +1,136 @@
-/* SceneBuilder.css */
+/* src/components/SceneBuilder/SceneBuilder.css */
 
-.scene-container {
-    width: 90vw;
-    background: var(--color-surface);
-    border: 2px solid var(--color-border);
-    border-radius: 10px;
-    padding: 20px;
-    margin-top: 20px;
-    height: 75vh;
+.scene-builder-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 600px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #0b0c10;
+  color: #f5f5f5;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.scene-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
-    border-bottom: solid #3d444d 2px;
-    padding-bottom: 25px;
-    padding-top: 25px;
+.scene-builder-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #222;
+  background: #111319;
 }
 
-.scene-subtitle {
-    font-size: 12px;
-    color: #6b7280;
+.scene-builder-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.react-flow-table {
-    height: 85%;
-    padding: 15px;
+.scene-builder-toolbar-label {
+  font-size: 0.9rem;
+  color: #aaa;
 }
 
-.btn-reset {
-    height: 40px;
-    box-sizing: border-box;
-    padding: 10px;
-    border-radius: 5px;
-    background-color: var(--color-primary);
-    border: 1px solid var(--color-primary-border);
-    color: white;
-    font-weight: 400;
+.scene-builder-toolbar button {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #444;
+  background: #1b1f2a;
+  color: #f5f5f5;
+  cursor: pointer;
+  font-size: 0.85rem;
 }
 
-.btn-reset:hover {
-    background-color: var(--color-primary-hover);
-    transition: 0.5s;
-    color: black;
-    cursor: pointer;
+.scene-builder-toolbar button:hover {
+  background: #242938;
+}
+
+.scene-builder-run-button {
+  font-weight: 600;
+  padding-inline: 16px;
+  border-color: #4caf50;
+}
+
+.scene-builder-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  flex: 1;
+  min-height: 0;
+}
+
+.scene-builder-canvas {
+  height: 100%;
+  width: 50vw;
+  max-width: 1000px;
+}
+
+.scene-builder-sidepanel {
+  border-left: 1px solid #222;
+  padding: 8px;
+  font-size: 0.8rem;
+  background: #0e1017;
+  overflow: auto;
+}
+
+.scene-builder-sidepanel h3 {
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.scene-builder-json {
+  background: #050608;
+  border-radius: 4px;
+  padding: 6px;
+  border: 1px solid #222;
+  overflow: auto;
+  max-height: 200px;
+}
+
+/* Node styles */
+
+.scene-node {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  font-size: 0.85rem;
+  min-width: 90px;
+  text-align: center;
+  background: #181b24;
+}
+
+.scene-node-label {
+  font-weight: 600;
+}
+
+/* I/O nodes */
+
+.scene-node-io {
+  background: #1a1f2c;
+}
+
+.scene-node-input {
+  border-color: #2196f3;
+}
+
+.scene-node-output {
+  border-color: #ff9800;
+}
+
+/* Model nodes */
+
+.scene-node-model {
+  background: #181c2a;
+}
+
+.scene-node-sntherm {
+  border-color: #9c27b0;
+}
+
+.scene-node-fasst {
+  border-color: #4caf50;
+}
+
+.react-flow__attribution {
+  display: none !important;
 }
