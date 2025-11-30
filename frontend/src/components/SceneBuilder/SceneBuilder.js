@@ -6,37 +6,57 @@ import ReactFlow, {
   addEdge,
   useNodesState,
   useEdgesState,
-  MarkerType,
   Handle,
   Position,
+  MarkerType,
 } from "reactflow";
 
 import "reactflow/dist/style.css";
 import "./SceneBuilder.css";
 
 // ---------------------------------------------------------
-// Input Node
+// Input Node (auto-selects mode based on outgoing connection)
 // ---------------------------------------------------------
 const InputNode = ({ id, data }) => {
-  const handleFileChange = (e) => {
+  const mode = data.mode;
+  const files = data.files;
+
+  /** Handle file selection */
+  const handleFasstFile = (e) => {
     const file = e.target.files?.[0];
-    data.onFileSelect(id, file);
+    data.onFileSelect(id, { fasstFile: file });
+  };
+
+  const handleSnthermTest = (e) => {
+    const file = e.target.files?.[0];
+    data.onFileSelect(id, { ...files, testIn: file });
+  };
+
+  const handleSnthermMetSwe = (e) => {
+    const file = e.target.files?.[0];
+    data.onFileSelect(id, { ...files, metSweIn: file });
   };
 
   return (
     <div className="scene-node scene-node-io">
       <Handle type="source" position={Position.Right} />
+      <div className="scene-node-label">Input ({mode})</div>
 
-      <div className="scene-node-label">Input</div>
+      {mode === "FASST" && (
+        <>
+          <input type="file" onChange={handleFasstFile} className="node-file-input" />
+          {files?.fasstFile && <p className="node-file-name">{files.fasstFile.name}</p>}
+        </>
+      )}
 
-      <input
-        type="file"
-        onChange={handleFileChange}
-        className="node-file-input"
-      />
+      {mode === "SNTHERM" && (
+        <>
+          <input type="file" onChange={handleSnthermTest} className="node-file-input" />
+          {files?.testIn && <p className="node-file-name">{files.testIn.name}</p>}
 
-      {data.file && (
-        <p className="node-file-name">{data.file.name}</p>
+          <input type="file" onChange={handleSnthermMetSwe} className="node-file-input" />
+          {files?.metSweIn && <p className="node-file-name">{files.metSweIn.name}</p>}
+        </>
       )}
     </div>
   );
@@ -45,52 +65,66 @@ const InputNode = ({ id, data }) => {
 // ---------------------------------------------------------
 // FASST Node
 // ---------------------------------------------------------
-const FasstNode = () => {
-  return (
-    <div className="scene-node scene-node-model scene-node-fasst">
-      <Handle type="target" position={Position.Left} />
-      <div className="scene-node-label">FASST</div>
-      <Handle type="source" position={Position.Right} />
-    </div>
-  );
-};
+const FasstNode = () => (
+  <div className="scene-node scene-node-model scene-node-fasst">
+    <Handle type="target" position={Position.Left} />
+    <div className="scene-node-label">FASST</div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
+
+// ---------------------------------------------------------
+// SNTHERM Node
+// ---------------------------------------------------------
+const SnthermNode = () => (
+  <div className="scene-node scene-node-model scene-node-sntherm">
+    <Handle type="target" position={Position.Left} />
+    <div className="scene-node-label">SNTHERM</div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
 
 // ---------------------------------------------------------
 // Output Node
 // ---------------------------------------------------------
-const OutputNode = () => {
-  return (
-    <div className="scene-node scene-node-io scene-node-output">
-      <Handle type="target" position={Position.Left} />
-      <div className="scene-node-label">Output</div>
-    </div>
-  );
-};
+const OutputNode = () => (
+  <div className="scene-node scene-node-io scene-node-output">
+    <Handle type="target" position={Position.Left} />
+    <div className="scene-node-label">Output</div>
+  </div>
+);
 
+// Register node types
 const nodeTypes = {
   inputNode: InputNode,
   fasstNode: FasstNode,
+  snthermNode: SnthermNode,
   outputNode: OutputNode,
 };
 
 // ---------------------------------------------------------
-// Scene Builder Component
+// MAIN SCENE BUILDER
 // ---------------------------------------------------------
 export default function SceneBuilder() {
-  const apiBase = "http://localhost:5103/api/FasstIntegration";
+  const fasstApi = "http://localhost:5103/api/FasstIntegration";
+  const snthermApi = "http://localhost:5103/api/SnthermJob";
 
   const idRef = useRef(1);
   const nextId = () => `${idRef.current++}`;
 
-  // Pre-wired Input → FASST → Output chain
+  // -------------------------------------------------------
+  // Initial graph: Input → FASST → Output
+  // -------------------------------------------------------
   const initialNodes = [
     {
       id: nextId(),
       type: "inputNode",
       position: { x: 50, y: 150 },
       data: {
-        file: null,
+        mode: "FASST",
+        files: {},
         onFileSelect: handleFileSelect,
+        onAutoDetect: autoDetectMode,
       },
     },
     {
@@ -107,91 +141,165 @@ export default function SceneBuilder() {
     },
   ];
 
-  function handleFileSelect(nodeId, file) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === nodeId ? { ...n, data: { ...n.data, file } } : n
-      )
-    );
-  }
-
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-
   const [edges, setEdges, onEdgesChange] = useEdgesState([
-    {
-      id: "e1",
-      source: initialNodes[0].id,
-      target: initialNodes[1].id,
-      markerEnd: { type: MarkerType.ArrowClosed },
-    },
-    {
-      id: "e2",
-      source: initialNodes[1].id,
-      target: initialNodes[2].id,
-      markerEnd: { type: MarkerType.ArrowClosed },
-    },
+    { id: "e1", source: initialNodes[0].id, target: initialNodes[1].id, markerEnd: { type: MarkerType.ArrowClosed }},
+    { id: "e2", source: initialNodes[1].id, target: initialNodes[2].id, markerEnd: { type: MarkerType.ArrowClosed }},
   ]);
 
   const [status, setStatus] = useState("");
   const [outputArea, setOutputArea] = useState(null);
 
+  // ----------------------------------------
+  // ADD NODE BUTTONS
+  // ----------------------------------------
+  const addNode = (type) => {
+    const node = {
+      id: nextId(),
+      type,
+      position: { x: 100 + Math.random() * 200, y: 100 + Math.random() * 200 },
+      data:
+        type === "inputNode"
+          ? {
+              connectedModel: null,
+              files: {},
+              onFileUpdate: handleFileUpdate,
+            }
+          : {},
+    };
+    setNodes((nds) => nds.concat(node));
+  };
+
+  // ----------------------------------------
+  // UPDATE INPUT NODE FILES
+  // ----------------------------------------
+  function handleFileUpdate(nodeId, newFiles) {
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === nodeId
+          ? { ...n, data: { ...n.data, files: { ...newFiles } } }
+          : n
+      )
+    );
+  }
+  
+  // -------------------------------------------------------
+  // AUTO MODEL DETECTION (C-1 LOGIC)
+  // -------------------------------------------------------
+  function autoDetectMode(inputNodeId) {
+    const outgoing = edges.find(e => e.source === inputNodeId);
+    if (!outgoing) return "FASST";
+
+    const target = nodes.find(n => n.id === outgoing.target);
+    if (!target) return "FASST";
+
+    if (target.type === "snthermNode") return "SNTHERM";
+    if (target.type === "fasstNode") return "FASST";
+
+    return "FASST";
+  }
+
+  // Update files
+  function handleFileSelect(nodeId, newFiles) {
+    setNodes(nds =>
+      nds.map(n =>
+        n.id === nodeId ? { ...n, data: { ...n.data, files: { ...n.data.files, ...newFiles }}} : n
+      )
+    );
+  }
+
+  // Re-run auto-mode detection when edges change
+  const updateInputMode = () => {
+    setNodes(nds =>
+      nds.map(n => {
+        if (n.type !== "inputNode") return n;
+        const newMode = autoDetectMode(n.id);
+        return { ...n, data: { ...n.data, mode: newMode }};
+      })
+    );
+  };
+
+  // ReactFlow connect handler
   const onConnect = useCallback(
-    (params) =>
-      setEdges((eds) =>
-        addEdge(
-          { ...params, markerEnd: { type: MarkerType.ArrowClosed } },
-          eds
-        )
-      ),
+    (params) => {
+      setEdges(eds => addEdge({ ...params, markerEnd: { type: MarkerType.ArrowClosed }}, eds));
+      setTimeout(updateInputMode, 0);
+    },
     []
   );
 
-  // ---------------------------------------------------------
-  // Run the FASST container
-  // ---------------------------------------------------------
+  // When edges manually moved/removed
+  const onEdgesUpdated = (...args) => {
+    onEdgesChange(...args);
+    setTimeout(updateInputMode, 0);
+  };
+
+  // -------------------------------------------------------
+  // RUN MODEL (FASST or SNTHERM)
+  // -------------------------------------------------------
   const runScene = async () => {
-    setStatus("Running FASST...");
+    const input = nodes.find(n => n.type === "inputNode");
+    const modelNode = nodes.find(n => n.type === "fasstNode" || n.type === "snthermNode");
 
-    const inputNode = nodes.find((n) => n.type === "inputNode");
-
-    if (!inputNode?.data?.file) {
-      setStatus("No input file selected.");
+    if (!input || !modelNode) {
+      setStatus("Invalid chain.");
       return;
     }
 
+    const mode = input.data.mode;
+    const files = input.data.files;
+
     try {
-      const form = new FormData();
-      form.append("file", inputNode.data.file, inputNode.data.file.name);
+      setStatus("Running model...");
+      let result = null;
+      let outputs = [];
 
-      // RUN THE FASST CONTAINER
-      const runRes = await fetch(`${apiBase}/run`, {
-        method: "POST",
-        body: form,
-      });
+      // ---------- FASST ----------
+      if (mode === "FASST") {
+        const file = files.fasstFile;
+        if (!file) return setStatus("Missing FASST input file.");
 
-      if (!runRes.ok) {
-        const msg = await runRes.text();
-        throw new Error(msg);
+        const form = new FormData();
+        form.append("file", file, file.name);
+
+        const runRes = await fetch(`${fasstApi}/run`, { method: "POST", body: form });
+        result = await runRes.json();
+
+        const outRes = await fetch(`${fasstApi}/outputs`);
+        outputs = await outRes.json();
       }
 
-      const result = await runRes.json().catch(() => ({}));
+      // ---------- SNTHERM ----------
+      if (mode === "SNTHERM") {
+        if (!files.testIn || !files.metSweIn)
+          return setStatus("SNTHERM requires TEST.IN and METSWE.IN.");
 
-      // GET OUTPUT FILE LIST
-      const outRes = await fetch(`${apiBase}/outputs`);
-      const outputs = await outRes.json();
+        const form = new FormData();
+        form.append("test_in", files.testIn);
+        form.append("metswe_in", files.metSweIn);
+
+        const runRes = await fetch(`${snthermApi}/run`, { method: "POST", body: form });
+        result = await runRes.json();
+        outputs = result.outputs || [];
+      }
 
       setOutputArea({ result, outputs });
-      setStatus("FASST completed.");
+      setStatus("Completed.");
     } catch (err) {
       setStatus("Error: " + err.message);
     }
   };
 
-  // ---------------------------------------------------------
+  // -------------------------------------------------------
   return (
     <div className="scene-builder-root">
+      
       {/* Toolbar */}
       <div className="scene-builder-toolbar">
+        <button onClick={() => addNode("inputNode")}>+ Input</button>
+        <button onClick={() => addNode("snthermNode")}>+ SNTHERM</button>
+        <button onClick={() => addNode("fasstNode")}>+ FASST</button>
+        <button onClick={() => addNode("outputNode")}>+ Output</button>
         <button className="scene-builder-run-button" onClick={runScene}>
           Run Scene
         </button>
@@ -204,28 +312,28 @@ export default function SceneBuilder() {
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
             nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesUpdated}
+            onConnect={onConnect}
             fitView
           >
-            <Background variant="dots" gap={16} size={1} />
+            <Background variant="dots" gap={20} size={1} />
             <Controls />
           </ReactFlow>
         </div>
       </div>
 
-      {/* Output Panel */}
+      {/* Output */}
       {outputArea && (
         <div className="scene-output-panel">
-          <h3>FASST Output</h3>
+          <h3>Output</h3>
 
           <pre className="output-json">
             {JSON.stringify(outputArea.result, null, 2)}
           </pre>
 
-          <h4>Output Files</h4>
+          <h4>Files</h4>
           <ul>
             {outputArea.outputs?.map((f) => (
               <li key={f}>{f}</li>
