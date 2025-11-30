@@ -89,7 +89,7 @@ namespace IMASS.Services
             var result = await _runners.RunModelAsync(modelName, jobTitle, inputFile1, inputFile2, runsRoot, TimeSpan.FromMinutes(10), ct);
             if (result.ModelName == "fasst")
             {
-                return (scenario, chain, job, null!);
+                return (scenario, chain, job, result);
             }
             
             if (result == null)
