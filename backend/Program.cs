@@ -19,6 +19,8 @@ builder.Services.Configure<FormOptions>(o =>
     o.MemoryBufferThreshold = int.MaxValue;
 });
 // Add services to the container.
+builder.Services.AddHttpClient<IFasstApiService, FasstApiService>();
+builder.Services.AddScoped<FasstApiService>();
 builder.Services.AddScoped<IScenarioBuilder, ScenarioBuilder>();
 builder.Services.AddScoped<IModelRunner, ModelRunner>();
 //Connection to PostgresSql
