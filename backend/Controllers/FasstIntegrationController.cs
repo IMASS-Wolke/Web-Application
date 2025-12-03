@@ -114,5 +114,34 @@ namespace IMASS.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpPost("run-coupled")]
+        public async Task<IActionResult> RunCoupledFasst(IFormFile fasstFile, IFormFile snthermFile)
+        {
+            if (fasstFile == null || fasstFile.Length == 0)
+                return BadRequest("No FASST input file provided");
+
+            if (snthermFile == null || snthermFile.Length == 0)
+                return BadRequest("No SNTHERM output file provided");
+
+            try
+            {
+                using var fasstStream = fasstFile.OpenReadStream();
+                using var snthermStream = snthermFile.OpenReadStream();
+                
+                var result = await _fasstApiService.RunCoupledFasstAsync(
+                    fasstStream, 
+                    fasstFile.FileName, 
+                    snthermStream, 
+                    snthermFile.FileName);
+                
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error running coupled FASST");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }
