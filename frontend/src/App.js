@@ -1,4 +1,5 @@
 import './App.css';
+import 'reactflow/dist/style.css';
 import { Route, Routes, Navigate } from 'react-router-dom';
 
 import Navbar from "./components/Navbar/Navbar.js";
@@ -7,6 +8,7 @@ import Navbar from "./components/Navbar/Navbar.js";
 import Home from "./components/Home/Home.js";
 import Login from "./components/Login/Login.js";
 import Signup from "./components/Signup/Signup.js";
+import SceneBuilder from "./components/SceneBuilder/SceneBuilder.js";
 
 // import models
 import ModelRunner from "./components/Models/ModelRunner/ModelRunner.js";
@@ -25,6 +27,7 @@ function App() {
           <Route path="/signup" element={ <Signup /> } />
           <Route path="/models" element={<ModelRunner />} />
           <Route path="/fasst" element={ <Fasst /> } />
+          <Route path="/scene-builder" element={ <SceneBuilder /> } />
           <Route path="*" element={ <h1>404 Error</h1> } />
         </Routes>
       </main>

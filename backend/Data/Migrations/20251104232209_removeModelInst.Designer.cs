@@ -3,6 +3,7 @@ using System;
 using IMASS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IMASS.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251104232209_removeModelInst")]
+    partial class removeModelInst
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,29 +99,6 @@ namespace IMASS.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("IMASS.Models.Chain", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ScenarioId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ScenarioId");
-
-                    b.ToTable("Chains");
-                });
-
             modelBuilder.Entity("IMASS.Models.Job", b =>
                 {
                     b.Property<int>("JobId")
@@ -127,16 +107,11 @@ namespace IMASS.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("JobId"));
 
-                    b.Property<Guid>("ChainId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("JobId");
-
-                    b.HasIndex("ChainId");
 
                     b.ToTable("Jobs");
                 });
@@ -153,36 +128,13 @@ namespace IMASS.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("ScenarioId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("ModelId");
 
-                    b.HasIndex("ScenarioId");
-
                     b.ToTable("Models");
-                });
-
-            modelBuilder.Entity("IMASS.Models.Scenario", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Scenarios");
                 });
 
             modelBuilder.Entity("IMASS.Models.TokenInfo", b =>
@@ -209,39 +161,6 @@ namespace IMASS.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TokenInfo");
-                });
-
-            modelBuilder.Entity("IMASS.SnthermModel.SnthermRunResult", b =>
-                {
-                    b.Property<string>("runId")
-                        .HasColumnType("text");
-
-                    b.PrimitiveCollection<string[]>("Outputs")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<string>("ResultsDir")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("StandardError")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("StandardOutput")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("WorkDir")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("exitCode")
-                        .HasColumnType("integer");
-
-                    b.HasKey("runId");
-
-                    b.ToTable("SnthermRunResults");
                 });
 
             modelBuilder.Entity("JobModel", b =>
@@ -391,31 +310,6 @@ namespace IMASS.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("IMASS.Models.Chain", b =>
-                {
-                    b.HasOne("IMASS.Models.Scenario", null)
-                        .WithMany("Chains")
-                        .HasForeignKey("ScenarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("IMASS.Models.Job", b =>
-                {
-                    b.HasOne("IMASS.Models.Chain", null)
-                        .WithMany("Jobs")
-                        .HasForeignKey("ChainId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("IMASS.Models.Model", b =>
-                {
-                    b.HasOne("IMASS.Models.Scenario", null)
-                        .WithMany("Models")
-                        .HasForeignKey("ScenarioId");
-                });
-
             modelBuilder.Entity("JobModel", b =>
                 {
                     b.HasOne("IMASS.Models.Job", null)
@@ -480,18 +374,6 @@ namespace IMASS.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("IMASS.Models.Chain", b =>
-                {
-                    b.Navigation("Jobs");
-                });
-
-            modelBuilder.Entity("IMASS.Models.Scenario", b =>
-                {
-                    b.Navigation("Chains");
-
-                    b.Navigation("Models");
                 });
 #pragma warning restore 612, 618
         }

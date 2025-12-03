@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
+using IMASS.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<FormOptions>(o =>
 {
@@ -17,7 +19,10 @@ builder.Services.Configure<FormOptions>(o =>
     o.MemoryBufferThreshold = int.MaxValue;
 });
 // Add services to the container.
-
+builder.Services.AddHttpClient<IFasstApiService, FasstApiService>();
+builder.Services.AddScoped<FasstApiService>();
+builder.Services.AddScoped<IScenarioBuilder, ScenarioBuilder>();
+builder.Services.AddScoped<IModelRunner, ModelRunner>();
 //Connection to PostgresSql
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
@@ -76,14 +81,25 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 
+
 // Add FASST API service
 builder.Services.AddHttpClient<IFasstApiService, FasstApiService>();
 builder.Services.AddScoped<IFasstApiService, FasstApiService>();
+builder.Services.AddHttpClient("FasstHealth", client =>
+{
+    var baseUrl = builder.Configuration["Fasst:BaseUrl"] ?? "http://localhost:8000";
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
 
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// [SignalR] register the hub services
+builder.Services.AddSignalR();
+builder.Services.AddHostedService<FasstHealthPublisherService>();
 
 var app = builder.Build();
 
@@ -101,7 +117,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// [SignalR] map the hub endpoint
+app.MapHub<HealthHub>("/hubs/health");
+
 //Seed Admin User if none exists (this comes directly from our DbSeeder class using the function)
-//await DbSeeder.SeedDataAsync(app);
+await DbSeeder.SeedDataAsync(app);
 
 app.Run();

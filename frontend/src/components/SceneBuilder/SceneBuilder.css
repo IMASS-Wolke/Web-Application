@@ -1,0 +1,51 @@
+/* SceneBuilder.css */
+
+.scene-container {
+    width: 90vw;
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    height: 75vh;
+}
+
+.scene-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+    border-bottom: solid #3d444d 2px;
+    padding-bottom: 25px;
+    padding-top: 25px;
+}
+
+.scene-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.react-flow-table {
+    height: 85%;
+    padding: 15px;
+}
+
+.btn-reset {
+    height: 40px;
+    box-sizing: border-box;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-primary-border);
+    color: white;
+    font-weight: 400;
+}
+
+.btn-reset:hover {
+    background-color: var(--color-primary-hover);
+    transition: 0.5s;
+    color: black;
+    cursor: pointer;
+}
