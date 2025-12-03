@@ -428,16 +428,17 @@ export default function SceneBuilder() {
   return (
     <div className="scene-builder-root">
       <div className="scene-builder-toolbar">
-        <button onClick={() => addNode("inputNode")}>+ Input</button>
-        <button onClick={() => addNode("snthermNode")}>+ SNTHERM</button>
-        <button onClick={() => addNode("fasstNode")}>+ FASST</button>
-        <button onClick={() => addNode("outputNode")}>+ Output</button>
-
-        <button className="scene-builder-run-button" onClick={runScene}>
-          Run Scene
-        </button>
-
-        <span className="scene-status">{status}</span>
+        <div className="add-node-container">
+          <button className="add-node-button" onClick={() => addNode("inputNode")}>+ Input</button>
+          <button className="add-node-button" onClick={() => addNode("snthermNode")}>+ SNTHERM</button>
+          <button className="add-node-button" onClick={() => addNode("fasstNode")}>+ FASST</button>
+          <button className="add-node-button" onClick={() => addNode("outputNode")}>+ Output</button>
+        </div>
+        <div className="scene-builder-run-container">
+          <button className="scene-builder-run-button" onClick={runScene}>
+            Run Scene
+          </button>
+        </div>
       </div>
 
       <div className="scene-builder-main">
@@ -458,6 +459,7 @@ export default function SceneBuilder() {
         </div>
       </div>
 
+      <span className="scene-status">{status}</span>
       {/* OUTPUT PANEL */}
       <div className="scene-output-panel">
         <h3>SNTHERM Output</h3>
