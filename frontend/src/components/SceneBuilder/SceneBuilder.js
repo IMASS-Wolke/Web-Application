@@ -21,7 +21,6 @@ const InputNode = ({ id, data }) => {
   const mode = data.mode;
   const files = data.files;
 
-  /** Handle file selection */
   const handleFasstFile = (e) => {
     const file = e.target.files?.[0];
     data.onFileSelect(id, { fasstFile: file });
@@ -106,8 +105,7 @@ const nodeTypes = {
 // MAIN SCENE BUILDER
 // ---------------------------------------------------------
 export default function SceneBuilder() {
-  const fasstApi = "http://localhost:5103/api/FasstIntegration";
-  const snthermApi = "http://localhost:5103/api/SnthermJob";
+  const scenarioApi = "http://localhost:5103/api/ScenarioBuilder/run";
 
   const idRef = useRef(1);
   const nextId = () => `${idRef.current++}`;
@@ -143,8 +141,18 @@ export default function SceneBuilder() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([
-    { id: "e1", source: initialNodes[0].id, target: initialNodes[1].id, markerEnd: { type: MarkerType.ArrowClosed }},
-    { id: "e2", source: initialNodes[1].id, target: initialNodes[2].id, markerEnd: { type: MarkerType.ArrowClosed }},
+    {
+      id: "e1",
+      source: initialNodes[0].id,
+      target: initialNodes[1].id,
+      markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+      id: "e2",
+      source: initialNodes[1].id,
+      target: initialNodes[2].id,
+      markerEnd: { type: MarkerType.ArrowClosed },
+    },
   ]);
 
   const [status, setStatus] = useState("");
@@ -170,9 +178,6 @@ export default function SceneBuilder() {
     setNodes((nds) => nds.concat(node));
   };
 
-  // ----------------------------------------
-  // UPDATE INPUT NODE FILES
-  // ----------------------------------------
   function handleFileUpdate(nodeId, newFiles) {
     setNodes((nds) =>
       nds.map((n) =>
@@ -182,15 +187,13 @@ export default function SceneBuilder() {
       )
     );
   }
-  
-  // -------------------------------------------------------
-  // AUTO MODEL DETECTION (C-1 LOGIC)
-  // -------------------------------------------------------
+
+  // AUTO-DETECT MODEL
   function autoDetectMode(inputNodeId) {
-    const outgoing = edges.find(e => e.source === inputNodeId);
+    const outgoing = edges.find((e) => e.source === inputNodeId);
     if (!outgoing) return "FASST";
 
-    const target = nodes.find(n => n.id === outgoing.target);
+    const target = nodes.find((n) => n.id === outgoing.target);
     if (!target) return "FASST";
 
     if (target.type === "snthermNode") return "SNTHERM";
@@ -199,36 +202,39 @@ export default function SceneBuilder() {
     return "FASST";
   }
 
-  // Update files
   function handleFileSelect(nodeId, newFiles) {
-    setNodes(nds =>
-      nds.map(n =>
-        n.id === nodeId ? { ...n, data: { ...n.data, files: { ...n.data.files, ...newFiles }}} : n
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === nodeId
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                files: { ...n.data.files, ...newFiles },
+              },
+            }
+          : n
       )
     );
   }
 
-  // Re-run auto-mode detection when edges change
   const updateInputMode = () => {
-    setNodes(nds =>
-      nds.map(n => {
+    setNodes((nds) =>
+      nds.map((n) => {
         if (n.type !== "inputNode") return n;
         const newMode = autoDetectMode(n.id);
-        return { ...n, data: { ...n.data, mode: newMode }};
+        return { ...n, data: { ...n.data, mode: newMode } };
       })
     );
   };
 
-  // ReactFlow connect handler
-  const onConnect = useCallback(
-    (params) => {
-      setEdges(eds => addEdge({ ...params, markerEnd: { type: MarkerType.ArrowClosed }}, eds));
-      setTimeout(updateInputMode, 0);
-    },
-    []
-  );
+  const onConnect = useCallback((params) => {
+    setEdges((eds) =>
+      addEdge({ ...params, markerEnd: { type: MarkerType.ArrowClosed } }, eds)
+    );
+    setTimeout(updateInputMode, 0);
+  }, []);
 
-  // When edges manually moved/removed
   const onEdgesUpdated = (...args) => {
     onEdgesChange(...args);
     setTimeout(updateInputMode, 0);
@@ -238,8 +244,10 @@ export default function SceneBuilder() {
   // RUN MODEL (FASST or SNTHERM)
   // -------------------------------------------------------
   const runScene = async () => {
-    const input = nodes.find(n => n.type === "inputNode");
-    const modelNode = nodes.find(n => n.type === "fasstNode" || n.type === "snthermNode");
+    const input = nodes.find((n) => n.type === "inputNode");
+    const modelNode = nodes.find(
+      (n) => n.type === "fasstNode" || n.type === "snthermNode"
+    );
 
     if (!input || !modelNode) {
       setStatus("Invalid chain.");
@@ -254,34 +262,34 @@ export default function SceneBuilder() {
       let result = null;
       let outputs = [];
 
-      // ---------- FASST ----------
+      const form = new FormData();
+
       if (mode === "FASST") {
-        const file = files.fasstFile;
-        if (!file) return setStatus("Missing FASST input file.");
+        if (!files.fasstFile)
+          return setStatus("Missing FASST input file.");
 
-        const form = new FormData();
-        form.append("file", file, file.name);
-
-        const runRes = await fetch(`${fasstApi}/run`, { method: "POST", body: form });
-        result = await runRes.json();
-
-        const outRes = await fetch(`${fasstApi}/outputs`);
-        outputs = await outRes.json();
+        form.append("model_name", "FASST");
+        form.append("scenario_name", "Auto Scene");
+        form.append("inputFile1", files.fasstFile);
       }
 
-      // ---------- SNTHERM ----------
       if (mode === "SNTHERM") {
         if (!files.testIn || !files.metSweIn)
-          return setStatus("SNTHERM requires TEST.IN and METSWE.IN.");
+          return setStatus("SNTHERM requires TEST.IN and METSWE.IN");
 
-        const form = new FormData();
-        form.append("test_in", files.testIn);
-        form.append("metswe_in", files.metSweIn);
-
-        const runRes = await fetch(`${snthermApi}/run`, { method: "POST", body: form });
-        result = await runRes.json();
-        outputs = result.outputs || [];
+        form.append("model_name", "SNTHERM");
+        form.append("scenario_name", "Auto Scene");
+        form.append("inputFile1", files.testIn);
+        form.append("inputFile2", files.metSweIn);
       }
+
+      const runRes = await fetch(scenarioApi, {
+        method: "POST",
+        body: form,
+      });
+
+      result = await runRes.json();
+      outputs = result.Outputs || [];
 
       setOutputArea({ result, outputs });
       setStatus("Completed.");
@@ -293,8 +301,6 @@ export default function SceneBuilder() {
   // -------------------------------------------------------
   return (
     <div className="scene-builder-root">
-      
-      {/* Toolbar */}
       <div className="scene-builder-toolbar">
         <button onClick={() => addNode("inputNode")}>+ Input</button>
         <button onClick={() => addNode("snthermNode")}>+ SNTHERM</button>
@@ -306,7 +312,6 @@ export default function SceneBuilder() {
         <span className="scene-status">{status}</span>
       </div>
 
-      {/* Canvas */}
       <div className="scene-builder-main">
         <div className="scene-builder-canvas">
           <ReactFlow
@@ -324,7 +329,6 @@ export default function SceneBuilder() {
         </div>
       </div>
 
-      {/* Output */}
       {outputArea && (
         <div className="scene-output-panel">
           <h3>Output</h3>
