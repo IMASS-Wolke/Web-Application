@@ -11,11 +11,13 @@ import ReactFlow, {
   MarkerType,
 } from "reactflow";
 
+import JSZip from "jszip";
+
 import "reactflow/dist/style.css";
 import "./SceneBuilder.css";
 
 // ---------------------------------------------------------
-// Input Node (auto-selects mode based on outgoing connection)
+// Input Node
 // ---------------------------------------------------------
 const InputNode = ({ id, data }) => {
   const mode = data.mode;
@@ -43,18 +45,18 @@ const InputNode = ({ id, data }) => {
 
       {mode === "FASST" && (
         <>
-          <input type="file" onChange={handleFasstFile} className="node-file-input" />
-          {files?.fasstFile && <p className="node-file-name">{files.fasstFile.name}</p>}
+          <input type="file" onChange={handleFasstFile} />
+          {files?.fasstFile && <p>{files.fasstFile.name}</p>}
         </>
       )}
 
       {mode === "SNTHERM" && (
         <>
-          <input type="file" onChange={handleSnthermTest} className="node-file-input" />
-          {files?.testIn && <p className="node-file-name">{files.testIn.name}</p>}
+          <input type="file" onChange={handleSnthermTest} />
+          {files?.testIn && <p>{files.testIn.name}</p>}
 
-          <input type="file" onChange={handleSnthermMetSwe} className="node-file-input" />
-          {files?.metSweIn && <p className="node-file-name">{files.metSweIn.name}</p>}
+          <input type="file" onChange={handleSnthermMetSwe} />
+          {files?.metSweIn && <p>{files.metSweIn.name}</p>}
         </>
       )}
     </div>
@@ -62,7 +64,7 @@ const InputNode = ({ id, data }) => {
 };
 
 // ---------------------------------------------------------
-// FASST Node
+// Model Nodes
 // ---------------------------------------------------------
 const FasstNode = () => (
   <div className="scene-node scene-node-model scene-node-fasst">
@@ -72,9 +74,6 @@ const FasstNode = () => (
   </div>
 );
 
-// ---------------------------------------------------------
-// SNTHERM Node
-// ---------------------------------------------------------
 const SnthermNode = () => (
   <div className="scene-node scene-node-model scene-node-sntherm">
     <Handle type="target" position={Position.Left} />
@@ -93,7 +92,6 @@ const OutputNode = () => (
   </div>
 );
 
-// Register node types
 const nodeTypes = {
   inputNode: InputNode,
   fasstNode: FasstNode,
@@ -105,13 +103,14 @@ const nodeTypes = {
 // MAIN SCENE BUILDER
 // ---------------------------------------------------------
 export default function SceneBuilder() {
-  const scenarioApi = "http://localhost:5103/api/ScenarioBuilder/run";
+  const runApi = "http://localhost:5103/api/ScenarioBuilder/run";
+  const snthermOutputApi = "http://localhost:5103/api/SnthermJob/runs";
 
   const idRef = useRef(1);
   const nextId = () => `${idRef.current++}`;
 
   // -------------------------------------------------------
-  // Initial graph: Input → FASST → Output
+  // Initial graph
   // -------------------------------------------------------
   const initialNodes = [
     {
@@ -119,103 +118,65 @@ export default function SceneBuilder() {
       type: "inputNode",
       position: { x: 50, y: 150 },
       data: {
-        mode: "FASST",
+        mode: "SNTHERM",
         files: {},
         onFileSelect: handleFileSelect,
         onAutoDetect: autoDetectMode,
       },
     },
-    {
-      id: nextId(),
-      type: "fasstNode",
-      position: { x: 300, y: 150 },
-      data: {},
-    },
-    {
-      id: nextId(),
-      type: "outputNode",
-      position: { x: 550, y: 150 },
-      data: {},
-    },
   ];
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([
-    {
-      id: "e1",
-      source: initialNodes[0].id,
-      target: initialNodes[1].id,
-      markerEnd: { type: MarkerType.ArrowClosed },
-    },
-    {
-      id: "e2",
-      source: initialNodes[1].id,
-      target: initialNodes[2].id,
-      markerEnd: { type: MarkerType.ArrowClosed },
-    },
-  ]);
-
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [status, setStatus] = useState("");
-  const [outputArea, setOutputArea] = useState(null);
+  const [outputArea, setOutputArea] = useState({ sntherm: null, fasst: null });
 
-  // ----------------------------------------
-  // ADD NODE BUTTONS
-  // ----------------------------------------
+  // -------------------------------------------------------
+  // Add Nodes
+  // -------------------------------------------------------
   const addNode = (type) => {
     const node = {
       id: nextId(),
       type,
-      position: { x: 100 + Math.random() * 200, y: 100 + Math.random() * 200 },
+      position: { x: 150 + Math.random() * 200, y: 150 + Math.random() * 150 },
       data:
         type === "inputNode"
           ? {
-              connectedModel: null,
-              files: {},
-              onFileUpdate: handleFileUpdate,
-            }
+            files: {},
+            onFileSelect: handleFileSelect,
+          }
           : {},
     };
     setNodes((nds) => nds.concat(node));
   };
 
-  function handleFileUpdate(nodeId, newFiles) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === nodeId
-          ? { ...n, data: { ...n.data, files: { ...newFiles } } }
-          : n
-      )
-    );
-  }
-
-  // AUTO-DETECT MODEL
-  function autoDetectMode(inputNodeId) {
-    const outgoing = edges.find((e) => e.source === inputNodeId);
-    if (!outgoing) return "FASST";
-
-    const target = nodes.find((n) => n.id === outgoing.target);
-    if (!target) return "FASST";
-
-    if (target.type === "snthermNode") return "SNTHERM";
-    if (target.type === "fasstNode") return "FASST";
-
-    return "FASST";
-  }
-
+  // -------------------------------------------------------
+  // File Handling
+  // -------------------------------------------------------
   function handleFileSelect(nodeId, newFiles) {
     setNodes((nds) =>
       nds.map((n) =>
         n.id === nodeId
-          ? {
-              ...n,
-              data: {
-                ...n.data,
-                files: { ...n.data.files, ...newFiles },
-              },
-            }
+          ? { ...n, data: { ...n.data, files: { ...n.data.files, ...newFiles } } }
           : n
       )
     );
+  }
+
+  // -------------------------------------------------------
+  // Auto-Detect Model Type
+  // -------------------------------------------------------
+  function autoDetectMode(inputNodeId) {
+    const outgoing = edges.find((e) => e.source === inputNodeId);
+    if (!outgoing) return "SNTHERM";
+
+    const target = nodes.find((n) => n.id === outgoing.target);
+    if (!target) return "SNTHERM";
+
+    if (target.type === "snthermNode") return "SNTHERM";
+    if (target.type === "fasstNode") return "FASST";
+
+    return "SNTHERM";
   }
 
   const updateInputMode = () => {
@@ -241,63 +202,141 @@ export default function SceneBuilder() {
   };
 
   // -------------------------------------------------------
-  // RUN MODEL (FASST or SNTHERM)
+  // GRAPH EXECUTION ORDER (TOPOLOGICAL SORT)
+  // -------------------------------------------------------
+  function computeExecutionOrder() {
+    const map = {};
+    nodes.forEach((n) => {
+      map[n.id] = { node: n, incoming: [], outgoing: [] };
+    });
+
+    edges.forEach((e) => {
+      map[e.source].outgoing.push(e.target);
+      map[e.target].incoming.push(e.source);
+    });
+
+    const order = [];
+    const queue = [];
+
+    Object.values(map)
+      .filter((x) => x.incoming.length === 0)
+      .forEach((x) => queue.push(x));
+
+    while (queue.length) {
+      const current = queue.shift();
+      order.push(current.node);
+
+      current.outgoing.forEach((targetId) => {
+        const t = map[targetId];
+        t.incoming = t.incoming.filter((id) => id !== current.node.id);
+        if (t.incoming.length === 0) queue.push(t);
+      });
+    }
+
+    return order;
+  }
+
+  // -------------------------------------------------------
+  // RUN SNTHERM
+  // -------------------------------------------------------
+  async function runSntherm(files) {
+    // --- send job to backend ---
+    const form = new FormData();
+    form.append("model_name", "SNTHERM");
+    form.append("scenario_name", "Scene");
+    form.append("inputFile1", files.testIn);
+    form.append("inputFile2", files.metSweIn);
+
+    const res = await fetch(runApi, { method: "POST", body: form });
+
+    const text = await res.text();
+    let json;
+    try {
+        json = JSON.parse(text);
+    } catch {
+        console.error("Invalid JSON from SNTHERM:", text);
+        throw new Error("SNTHERM returned invalid JSON");
+    }
+
+    setOutputArea((o) => ({ ...o, sntherm: json }));
+
+    const runId = json.runId ?? json.runID ?? json.runid;
+    if (!runId) throw new Error("SNTHERM did not return runId");
+
+    // --- download ZIP with results ---
+    const zipRes = await fetch(`${snthermOutputApi}/${runId}/zip`);
+    const zipBlob = await zipRes.blob();
+
+    // --- load ZIP with JSZip ---
+    const jszipData = await JSZip.loadAsync(zipBlob);
+    
+    let brockFile = null;
+
+    for (let path in jszipData.files) {
+        if (path.toLowerCase().includes("brock.out")) {
+            const content = await jszipData.files[path].async("blob");
+            brockFile = new File([content], "brock.out");
+        }
+    }
+
+    if (!brockFile) {
+        throw new Error("brock.out not found in ZIP");
+    }
+
+    return brockFile;
+}
+
+
+
+  // -------------------------------------------------------
+  // RUN FASST WITH SNTHERM OUTPUT
+  // -------------------------------------------------------
+  async function runFasst(inputFile) {
+    const form = new FormData();
+    form.append("model_name", "FASST");
+    form.append("scenario_name", "Scene");
+    form.append("inputFile1", inputFile);
+
+    const res = await fetch(runApi, { method: "POST", body: form });
+    const json = await res.json();
+
+    setOutputArea((o) => ({ ...o, fasst: json }));
+
+    return json;
+  }
+
+  // -------------------------------------------------------
+  // RUN CHAIN (SNTHERM → FASST)
   // -------------------------------------------------------
   const runScene = async () => {
-    const input = nodes.find((n) => n.type === "inputNode");
-    const modelNode = nodes.find(
-      (n) => n.type === "fasstNode" || n.type === "snthermNode"
-    );
+    setStatus("Running chain...");
 
-    if (!input || !modelNode) {
-      setStatus("Invalid chain.");
-      return;
-    }
+    const order = computeExecutionOrder();
 
-    const mode = input.data.mode;
-    const files = input.data.files;
+    let snthermInput = null;
+    let snthermOutputFile = null;
 
-    try {
-      setStatus("Running model...");
-      let result = null;
-      let outputs = [];
-
-      const form = new FormData();
-
-      if (mode === "FASST") {
-        if (!files.fasstFile)
-          return setStatus("Missing FASST input file.");
-
-        form.append("model_name", "FASST");
-        form.append("scenario_name", "Auto Scene");
-        form.append("inputFile1", files.fasstFile);
+    for (const n of order) {
+      if (n.type === "inputNode") {
+        if (n.data.mode === "SNTHERM") {
+          snthermInput = n.data.files;
+        }
       }
 
-      if (mode === "SNTHERM") {
-        if (!files.testIn || !files.metSweIn)
-          return setStatus("SNTHERM requires TEST.IN and METSWE.IN");
-
-        form.append("model_name", "SNTHERM");
-        form.append("scenario_name", "Auto Scene");
-        form.append("inputFile1", files.testIn);
-        form.append("inputFile2", files.metSweIn);
+      if (n.type === "snthermNode") {
+        snthermOutputFile = await runSntherm(snthermInput);
       }
 
-      const runRes = await fetch(scenarioApi, {
-        method: "POST",
-        body: form,
-      });
-
-      result = await runRes.json();
-      outputs = result.Outputs || [];
-
-      setOutputArea({ result, outputs });
-      setStatus("Completed.");
-    } catch (err) {
-      setStatus("Error: " + err.message);
+      if (n.type === "fasstNode") {
+        await runFasst(snthermOutputFile);
+      }
     }
+
+    setStatus("Completed.");
   };
 
+  // -------------------------------------------------------
+  // UI
   // -------------------------------------------------------
   return (
     <div className="scene-builder-root">
@@ -306,9 +345,11 @@ export default function SceneBuilder() {
         <button onClick={() => addNode("snthermNode")}>+ SNTHERM</button>
         <button onClick={() => addNode("fasstNode")}>+ FASST</button>
         <button onClick={() => addNode("outputNode")}>+ Output</button>
+
         <button className="scene-builder-run-button" onClick={runScene}>
           Run Scene
         </button>
+
         <span className="scene-status">{status}</span>
       </div>
 
@@ -329,22 +370,18 @@ export default function SceneBuilder() {
         </div>
       </div>
 
-      {outputArea && (
-        <div className="scene-output-panel">
-          <h3>Output</h3>
+      {/* OUTPUT PANEL */}
+      <div className="scene-output-panel">
+        <h3>SNTHERM Output</h3>
+        <pre className="output-json">
+          {JSON.stringify(outputArea.sntherm, null, 2)}
+        </pre>
 
-          <pre className="output-json">
-            {JSON.stringify(outputArea.result, null, 2)}
-          </pre>
-
-          <h4>Files</h4>
-          <ul>
-            {outputArea.outputs?.map((f) => (
-              <li key={f}>{f}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+        <h3>FASST Output</h3>
+        <pre className="output-json">
+          {JSON.stringify(outputArea.fasst, null, 2)}
+        </pre>
+      </div>
     </div>
   );
 }
