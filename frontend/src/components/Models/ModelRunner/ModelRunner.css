@@ -22,6 +22,8 @@ button:hover {
 /*** FADE ANIMATION (GLOBAL) ***/
 
 .model-fade {
+  display: flex;
+  justify-content: center;
   opacity: 0;
   transform: translateY(5px);
   animation: fadeInModel 0.4s ease forwards;
@@ -32,6 +34,7 @@ button:hover {
     opacity: 0;
     transform: translateY(5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -41,7 +44,7 @@ button:hover {
 /*** MODEL SELECTOR DROPDOWN ***/
 
 .model-runner {
-  width: 650px;
+  width: 90vw;
   background: var(--color-surface);
   border: 2px solid var(--color-border);
   border-radius: 10px;
@@ -181,6 +184,7 @@ button:hover {
 
 /* Dropdown Input Styles */
 .dropdown-input {
+  max-width: 650px;
   border: 2px dashed var(--color-border);
   background: var(--color-surface);
   padding: 25px;
@@ -242,6 +246,38 @@ button:hover {
 }
 
 .sntherm-results {
+  background: #010409;
+  border: 2px solid #3d444d;
+  border-radius: 10px;
+  margin-top: 20px;
+  padding: 15px;
+  font-size: 18px;
+}
+
+/*** TEMP FASST ***/
+
+.fasst-charts {
+  margin-top: 24px;
+}
+
+.fasst-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 16px;
+}
+
+.fasst-chart-card {
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.fasst-chart-title {
+  margin: 0 0 8px;
+}
+
+.health-container {
   background: #010409;
   border: 2px solid #3d444d;
   border-radius: 10px;

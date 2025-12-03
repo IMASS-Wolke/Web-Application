@@ -141,52 +141,5 @@ namespace IMASS.Services
                 };
             }
         }
-
-        public async Task<FasstCoupledRunResult> RunCoupledFasstAsync(Stream fasstFileStream, string fasstFilename, Stream snthermFileStream, string snthermFilename)
-        {
-            try
-            {
-                var url = $"{BaseUrl}/run-coupled/";
-                using var content = new MultipartFormDataContent();
-
-                if (fasstFileStream.CanSeek) fasstFileStream.Position = 0;
-                if (snthermFileStream.CanSeek) snthermFileStream.Position = 0;
-
-                var fasstContent = new StreamContent(fasstFileStream);
-                content.Add(fasstContent, "fasst_file", fasstFilename);
-
-                var snthermContent = new StreamContent(snthermFileStream);
-                content.Add(snthermContent, "sntherm_file", snthermFilename);
-
-                var response = await _httpClient.PostAsync(url, content);
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = JsonSerializer.Deserialize<FasstCoupledRunResult>(responseContent, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                    return result ?? new FasstCoupledRunResult { Status = "Unknown", Stdout = responseContent };
-                }
-
-                _logger.LogError("Failed to run coupled FASST. Status: {StatusCode}, Response: {Body}", response.StatusCode, responseContent);
-                return new FasstCoupledRunResult
-                {
-                    Status = "Error",
-                    Stderr = $"HTTP Error: {response.StatusCode} - {responseContent}"
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error running coupled FASST");
-                return new FasstCoupledRunResult
-                {
-                    Status = "Error",
-                    Stderr = $"Error: {ex.Message}"
-                };
-            }
-        }
     }
 }
