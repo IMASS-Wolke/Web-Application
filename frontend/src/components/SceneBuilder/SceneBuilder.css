@@ -6,7 +6,6 @@
   height: auto;
   width: 90vw;
   color: #eee;
-  font-family: system-ui;
 }
 
 .scene-builder-toolbar {
@@ -18,6 +17,15 @@
   gap: 20px;
 }
 
+.scene-builder-menu-button {
+  padding: 6px 14px;
+  background: #1e90ff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: white;
+}
+
 .scene-builder-run-button {
   padding: 6px 14px;
   background: #1e90ff;
@@ -25,7 +33,6 @@
   border-radius: 6px;
   cursor: pointer;
   color: white;
-  font-weight: bold;
 }
 
 .scene-builder-run-button:hover {
@@ -74,8 +81,7 @@
 }
 
 .scene-node-label {
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-size: 18px;
 }
 
 /* Input Node */
