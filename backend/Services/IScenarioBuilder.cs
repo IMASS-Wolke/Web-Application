@@ -7,7 +7,7 @@ namespace IMASS.Services
 {
     public interface IScenarioBuilder
     {
-        Task<(Scenario scenario, Chain chain, Job job, SnthermRunResult run)> RunModelAsync(
+        Task<(Scenario scenario, Chain chain, Job job, ModelRunResult run)> RunModelAsync(
             string modelName,
             string scenarioName,
             Stream inputFile1,
@@ -23,7 +23,7 @@ namespace IMASS.Services
             );
 
         //Create Job and Model then run model
-        Task<(Scenario scenario, Chain chain,Job job, SnthermRunResult run)> CreateJobAndRunModelAsync(
+        Task<(Scenario scenario, Chain chain,Job job, ModelRunResult run)> CreateJobAndRunModelAsync(
             Guid scenarioId,
             Guid chainId,
             string modelName,
@@ -44,7 +44,7 @@ namespace IMASS.Services
             _runners = runners;
         }
 
-        public async Task<(Scenario, Chain, Job, SnthermRunResult)> CreateJobAndRunModelAsync(Guid scenarioId, Guid chainId, string modelName, Stream inputFile1, Stream inputFile2, string runsRoot, CancellationToken ct = default)
+        public async Task<(Scenario, Chain, Job, ModelRunResult)> CreateJobAndRunModelAsync(Guid scenarioId, Guid chainId, string modelName, Stream inputFile1, Stream inputFile2, string runsRoot, CancellationToken ct = default)
         {
             var scenario = await _context.Scenarios.Include(s => s.Chains).ThenInclude(c => c.Jobs!).FirstOrDefaultAsync(s => s.Id == scenarioId, ct);
             if (scenario == null)
@@ -72,27 +72,36 @@ namespace IMASS.Services
                 _context.Jobs.Add(job);
             }
             //Run Model
-            var sntherm = _context.Models.FirstOrDefault(m => m.Name == "Sntherm");
-            if (sntherm == null)
+            var Model = _context.Models.FirstOrDefault(m => m.Name == modelName);
+            if (Model == null)
             {
-                sntherm = new Model
+                Model = new Model
                 {
-                    Name = "Sntherm",
+                    Name = modelName,
                     Status = "Not active",
                     Jobs = new List<Job>(),
                 };
-                _context.Models.Add(sntherm);
+                _context.Models.Add(Model);
             }
-            job.Models.Add(sntherm);
+            job.Models.Add(Model);
             await _context.SaveChangesAsync(ct);
 
-            var result = await _runners.RunModelAsync(modelName, jobTitle, inputFile1, inputFile2, runsRoot, TimeSpan.FromMinutes(10), ct) as SnthermRunResult;
+            var result = await _runners.RunModelAsync(modelName, jobTitle, inputFile1, inputFile2, runsRoot, TimeSpan.FromMinutes(10), ct);
+            if (result.ModelName == "fasst")
+            {
+                return (scenario, chain, job, result);
+            }
+            
             if (result == null)
             {
                 throw new Exception("Model run failed.");
             }
-            sntherm.Status = result.exitCode == 0 ? "Completed" : "Failed";
-            await _context.SaveChangesAsync(ct);
+            if (result.ModelName == "sntherm")
+            {
+                var sn = result.Sntherm!;
+                Model.Status = sn.exitCode == 0 ? "Completed" : "Failed";
+                await _context.SaveChangesAsync(ct);
+            }
             return (scenario, chain, job, result);
 
         }
@@ -151,7 +160,7 @@ namespace IMASS.Services
 
 
         //Create scenario
-        public async Task<(Scenario, Chain, Job, SnthermRunResult)> RunModelAsync(
+        public async Task<(Scenario, Chain, Job, ModelRunResult)> RunModelAsync(
                 string modelName,
                 string scenarioName,
                 Stream inputFile1,
@@ -206,18 +215,18 @@ namespace IMASS.Services
                 
 
             //Run Model
-            var sntherm = _context.Models.FirstOrDefault(m => m.Name == "Sntherm");
-            if (sntherm == null)
+            var Model = _context.Models.FirstOrDefault(m => m.Name == modelName);
+            if (Model == null)
             {
-                sntherm = new Model
+                Model = new Model
                 {
-                    Name = "Sntherm",
+                    Name = modelName,
                     Status = "Not active",
                     Jobs = new List<Job>(),
                 };
-                _context.Models.Add(sntherm);
+                _context.Models.Add(Model);
             }
-            job.Models.Add(sntherm);
+            job.Models.Add(Model);
             await _context.SaveChangesAsync(ct);
 
             //Run Sntherm
@@ -225,13 +234,17 @@ namespace IMASS.Services
             //_runner is the IModelRunner injected
             //var result = await _runners.RunSnthermAsync(runsRoot, testIn, metSweIn,jobTitle, TimeSpan.FromMinutes(10), ct);
             //var result = await SnthermTest.RunAsync(runsRoot, testIn, metSweIn, jobTitle, TimeSpan.FromMinutes(10), ct);
-            var result = await _runners.RunModelAsync(modelName, jobTitle, inputFile1, inputFile2, runsRoot, TimeSpan.FromMinutes(10), ct) as SnthermRunResult;
+            var result = await _runners.RunModelAsync(modelName, jobTitle, inputFile1, inputFile2, runsRoot, TimeSpan.FromMinutes(10), ct);
             if (result == null)
             {
                 throw new Exception("Model run failed.");
             }
-            sntherm.Status = result.exitCode == 0 ? "Completed" : "Failed";
-            await _context.SaveChangesAsync(ct);
+            if (result.ModelName == "sntherm")
+            {
+                var sn = result.Sntherm!;
+                Model.Status = sn.exitCode == 0 ? "Completed" : "Failed";
+                await _context.SaveChangesAsync(ct);
+            }
             return (scenario, chain, job, result);
         }
     }
