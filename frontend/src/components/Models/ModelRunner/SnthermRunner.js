@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import { API_BASE_URL } from "../../../config";
 import "./ModelRunner.css";
 
 // Temp
@@ -30,11 +31,13 @@ function SnthermRunner() {
         setResult(null);
 
         try {
-            const res = await fetch("http://localhost:5103/api/SnthermJob/run", {
+            const res = await fetch(`${API_BASE_URL}/api/SnthermJob/run`, {
                 method: "POST",
                 body: formData,
             });
             const data = await res.json();
+            const outputs = data.outputs || data.Outputs || [];
+            data.outputs = outputs;
             setResult(data);
             setStatus(`SNTHERM run complete (Exit code: ${data.exitCode})`);
         } catch (err) {
@@ -45,7 +48,7 @@ function SnthermRunner() {
     const downloadSnthermZip = async () => {
         if (!result?.runId) return;
         const response = await fetch(
-            `http://localhost:5103/api/SnthermJob/runs/${result.runId}/zip`
+            `${API_BASE_URL}/api/SnthermJob/runs/${result.runId}/zip`
         );
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);

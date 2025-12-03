@@ -36,11 +36,14 @@ builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
     .AddDefaultTokenProviders();
 
 //Add CORS policy
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ??
+    new[] { "http://localhost:5173", "http://localhost:4200", "http://localhost:3000" };
+
 builder.Services.AddCors(opt =>
 {
     opt.AddPolicy("frontend", p =>
         p
-        .WithOrigins("http://localhost:5173", "http://localhost:4200", "http://localhost:3000")
+        .WithOrigins(corsOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials()
@@ -49,7 +52,7 @@ builder.Services.AddCors(opt =>
 
 
 //JWT Authentication
-builder.Services.AddAuthentication(options =>
+var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -69,15 +72,20 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.Zero,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
         };
-    })
-    .AddGoogle("Google", options =>
+    });
+
+var googleClientId = builder.Configuration["Google:ClientId"];
+var googleClientSecret = builder.Configuration["Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authBuilder.AddGoogle("Google", options =>
     {
-        options.ClientId = builder.Configuration["Google:ClientId"]!;
-        options.ClientSecret = builder.Configuration["Google:ClientSecret"]!;
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
         options.CallbackPath = "/signin-google";
-        // Important: tell Google where to store the external principal
         options.SignInScheme = IdentityConstants.ExternalScheme;
     });
+}
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 
@@ -87,7 +95,7 @@ builder.Services.AddHttpClient<IFasstApiService, FasstApiService>();
 builder.Services.AddScoped<IFasstApiService, FasstApiService>();
 builder.Services.AddHttpClient("FasstHealth", client =>
 {
-    var baseUrl = builder.Configuration["Fasst:BaseUrl"] ?? "http://localhost:8000";
+    var baseUrl = builder.Configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
     client.BaseAddress = new Uri(baseUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
 });

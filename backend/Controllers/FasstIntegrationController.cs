@@ -88,31 +88,48 @@ namespace IMASS.Controllers
 
         // Streams a file directly from FastAPI GET /outputs/{filename}/download
         [HttpGet("outputs/{filename}/stream")]
-        public async Task<IActionResult> GetOutputStream(string filename)
+        public async Task<IActionResult> GetOutputStream(string filename, CancellationToken ct)
         {
-            try
+            var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
+            var safeName = Uri.EscapeDataString(filename ?? string.Empty);
+            var baseUrl = fasstApiUrl.TrimEnd('/');
+
+            // Try both common FastAPI routes: `/outputs/{file}/download` first, then plain `/outputs/{file}`
+            var candidateUrls = new[]
             {
-                var fasstApiUrl = _configuration["FasstApi:BaseUrl"] ?? "http://localhost:8000";
-                var safeName = Uri.EscapeDataString(filename ?? string.Empty);
+                $"{baseUrl}/outputs/{safeName}/download",
+                $"{baseUrl}/outputs/{safeName}"
+            };
 
-                // NOTE: matches FastAPI route exactly
-                var response = await _httpClient.GetAsync($"{fasstApiUrl.TrimEnd('/')}/outputs/{safeName}/download");
-
-                if (response.IsSuccessStatusCode)
+            foreach (var url in candidateUrls)
+            {
+                try
                 {
-                    var stream = await response.Content.ReadAsStreamAsync();
-                    // If FastAPI returns a specific content-type, you can forward it:
-                    var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
-                    return File(stream, contentType, filename);
-                }
+                    var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        continue;
+                    }
 
-                return NotFound($"File {filename} not found");
+                    var stream = await response.Content.ReadAsStreamAsync(ct);
+                    var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+                    var downloadName = response.Content.Headers.ContentDisposition?.FileNameStar
+                                       ?? response.Content.Headers.ContentDisposition?.FileName
+                                       ?? filename;
+
+                    return File(stream, contentType, downloadName);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error streaming {Filename} via {Url}", filename, url);
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error streaming output: {filename}");
-                return StatusCode(500, "Internal server error");
-            }
+
+            return NotFound($"File {filename} not found");
         }
 
         [HttpPost("run-coupled")]

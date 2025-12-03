@@ -4,6 +4,7 @@ import logo from "../../assets/icons/cloud.svg";
 import { useState } from "react";
 import { GoogleLogin, googleLogout } from "@react-oauth/google";
 import { useNavigate, Link } from 'react-router-dom';
+import { API_BASE_URL } from "../../config";
 
 function Login() {
 
@@ -19,7 +20,7 @@ function Login() {
     console.log("Username:", username, "Password:", password);
 
     try {
-      const response = await fetch("http://localhost:5103/api/Accounts/Login", {
+      const response = await fetch(`${API_BASE_URL}/api/Accounts/Login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

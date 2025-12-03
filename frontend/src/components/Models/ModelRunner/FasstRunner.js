@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import "./ModelRunner.css";
 import downloadLogo from "../../../assets/icons/download.svg";
+import { API_BASE_URL } from "../../../config";
 // Recharts
 import {
   ResponsiveContainer,
@@ -28,7 +29,7 @@ function FasstRunner() {
   // charts: { [filename]: { data: Array<Record<string,number|string>>, columns: string[] } }
   const [charts, setCharts] = useState({});
 
-  const backendBase = "http://localhost:5103/api/FasstIntegration";
+  const backendBase = `${API_BASE_URL}/api/FasstIntegration`;
   const targetFiles = useMemo(
     () => ["fasst.out", "ground.out", "fluxes.out", "veg_temp.out", "snow_info.out"],
     []

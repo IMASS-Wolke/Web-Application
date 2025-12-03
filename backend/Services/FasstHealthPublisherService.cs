@@ -25,8 +25,8 @@ public class FasstHealthPublisherService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Default to your local docker-run address
-        var baseUrl = _config["Fasst:BaseUrl"] ?? "http://localhost:8000";
-        var path = _config["Fasst:HealthPath"] ?? "/";   // change to "/health" if you add one
+        var baseUrl = _config["FasstApi:BaseUrl"] ?? "http://localhost:8000";
+        var path = _config["FasstApi:HealthPath"] ?? "/";   // change to "/health" if you add one
 
         _logger.LogInformation("Starting FASST health publisher. BaseUrl = {BaseUrl}, Path = {Path}", baseUrl, path);
 

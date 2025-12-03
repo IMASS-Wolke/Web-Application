@@ -1,6 +1,7 @@
 import { useState } from "react";
 import FasstOutput from "../../Outputs/Fasst-outputs";
 import "./FASST.css";
+import { API_BASE_URL } from "../../../config";
 
 function Fasst() {
     const [temperatureC, setTemperatureC] = useState("");
@@ -14,7 +15,7 @@ function Fasst() {
             const jobId = 123; // Hardcode ID's until further notice
             const modelId = 321; // Hardcode ID's until further notice
 
-            const response = await fetch("http://localhost:5103/api/Job/${jobId}/models/${modelId}/Fasst", {
+            const response = await fetch(`${API_BASE_URL}/api/Job/${jobId}/models/${modelId}/Fasst`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

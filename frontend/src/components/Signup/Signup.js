@@ -3,6 +3,7 @@ import logo from "../../assets/icons/cloud.svg";
 
 import { use, useState } from "react";
 import { useNavigate, Link } from 'react-router-dom';
+import { API_BASE_URL } from "../../config";
 
 function Signup() {
     
@@ -19,7 +20,7 @@ function Signup() {
         console.log("Signup Attempt:", { name, email, password });
 
         try {
-            const response = await fetch("http://localhost:5103/api/Accounts/signup", {
+            const response = await fetch(`${API_BASE_URL}/api/Accounts/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

@@ -23,7 +23,7 @@ namespace IMASS.Controllers
             _config = config;
             _context = context;
         }
-        
+
         private string GetRunsRoot()
         {
             return _config.GetValue<string>("Sntherm:RunsRoot") ?? Path.Combine(_env.ContentRootPath, "SnthermRuns");
@@ -39,14 +39,15 @@ namespace IMASS.Controllers
             }
             var label = string.IsNullOrWhiteSpace(req.Label) ? "job" : req.Label;
             var runsRoot = _config.GetValue<string>("Sntherm:RunsRoot") ?? Path.Combine(_env.ContentRootPath, "SnthermRuns");
+            var volumeName = _config.GetValue<string>("Sntherm:VolumeName") ?? "sntherm-runs";
             Directory.CreateDirectory(runsRoot);
 
-            var image = _config.GetValue<string>("Image") ?? "ethancxyz/sntherm-job:1.0.0";
+            var image = _config.GetValue<string>("Sntherm:Image") ?? "ethancxyz/sntherm-job:1.0.0";
 
             await using var s1 = req.TestIn.OpenReadStream();
             await using var s2 = req.MetSweIn.OpenReadStream();
 
-            var result = await SnthermTest.RunAsync(runsRoot, s1, s2, label, TimeSpan.FromMinutes(10), ct);
+            var result = await SnthermTest.RunAsync(runsRoot, s1, s2, label, TimeSpan.FromMinutes(10), ct, image, volumeName);
             _context.SnthermRunResults.Add(result);
             await _context.SaveChangesAsync(ct);
 
@@ -58,7 +59,7 @@ namespace IMASS.Controllers
                 result.StandardError,
                 result.WorkDir,
                 result.ResultsDir,
-                Outputs = result.Outputs.Select(Path.GetFileName).ToArray()
+                outputs = result.Outputs.Select(Path.GetFileName).ToArray()
             });
 
         }

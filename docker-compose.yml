@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-imass}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-USER} -d ${POSTGRES_DB:-imass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  fasst:
+    image: seund123/fasst-api-server
+    ports:
+      - "8000:8000"
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      ASPNETCORE_URLS: http://+:5103
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection:-Host=db;Port=5432;Database=imass;Username=postgres;Password=postgres}
+      FasstApi__BaseUrl: ${FasstApi__BaseUrl:-http://fasst:8000}
+      FasstApi__HealthPath: ${FasstApi__HealthPath:-/}
+      Sntherm__RunsRoot: ${Sntherm__RunsRoot:-/sntherm}
+      Sntherm__Image: ${Sntherm__Image:-ethancxyz/sntherm-job:1.0.0}
+      Sntherm__VolumeName: ${Sntherm__VolumeName:-sntherm-runs}
+      JWT__ValidIssuer: ${JWT__ValidIssuer:-http://backend:5103}
+      JWT__ValidAudience: ${JWT__ValidAudience:-http://frontend:3000}
+      JWT__Secret: ${JWT__Secret:-SuperSecretKey12345_change_me!}
+      Google__ClientId: ${Google__ClientId}
+      Google__ClientSecret: ${Google__ClientSecret}
+      Cors__AllowedOrigins__0: ${Cors__AllowedOrigins__0:-http://localhost:3000}
+      Cors__AllowedOrigins__1: ${Cors__AllowedOrigins__1:-http://frontend:3000}
+      DOCKER_HOST: unix:///var/run/docker.sock
+    ports:
+      - "5103:5103"
+    volumes:
+      - sntherm-runs:${Sntherm__RunsRoot:-/sntherm}
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      db:
+        condition: service_healthy
+      fasst:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:5103}
+        REACT_APP_HUB_BASE_URL: ${REACT_APP_HUB_BASE_URL:-http://localhost:5103}
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  sntherm-runs:
+    name: sntherm-runs

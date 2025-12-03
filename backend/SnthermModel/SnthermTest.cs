@@ -8,15 +8,29 @@ namespace IMASS.SnthermModel
     {
         private static readonly string[] WantedOutputs = { "brock.out", "brock.flux", "filt.out" };
 
-        public static async Task<SnthermRunResult> RunAsync(string runsRoot, Stream testIn, Stream metSweIn, string label = "job", TimeSpan? timeout = null, CancellationToken ct = default)
+        public static async Task<SnthermRunResult> RunAsync(
+            string runsRoot,
+            Stream testIn,
+            Stream metSweIn,
+            string label = "job",
+            TimeSpan? timeout = null,
+            CancellationToken ct = default,
+            string dockerImage = "ethancxyz/sntherm-job:1.0.0",
+            string volumeName = "sntherm-runs")
         {
             var runId = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}".Substring(0, 40); //generates unique runId for each run
             var runRoot = Path.Combine(runsRoot, runId); //this is where the run folder is created
+            var workDir = runsRoot; // place inputs/outputs at the root of the shared volume
             var resultsPath = Path.Combine(runRoot, "results"); //this is where the output files will be stored on device
             Directory.CreateDirectory(resultsPath);
 
-            var workDir = Path.Combine(Path.GetTempPath(), "sntherm", runId);
             Directory.CreateDirectory(workDir);
+
+            // clean prior outputs in the shared work dir (leave it empty except inputs we add now)
+            foreach (var file in Directory.GetFiles(workDir))
+            {
+                try { File.Delete(file); } catch { }
+            }
 
             await WriteAllAsync(Path.Combine(workDir, "test.in"), testIn, ct);
             testIn.Position = 0;
@@ -26,12 +40,10 @@ namespace IMASS.SnthermModel
             metSweIn.Position = 0;
             await WriteAllAsync(Path.Combine(workDir, "METSWE.IN"), metSweIn, ct);
 
-            var dockerWorkDir = workDir.Replace('\\', '/');
-
-
-
-            var (exitCode, stdOut, stdErr) = await RunProcessAsync(dockerWorkDir,TimeSpan.FromMinutes(5), ct);
+            var (exitCode, stdOut, stdErr) = await RunProcessAsync(workDir,TimeSpan.FromMinutes(5), ct, dockerImage, volumeName, runsRoot);
             var results = new List<string>();
+
+            // Copy only the expected output files
             foreach (var output in WantedOutputs)
             {
                 var src = Path.Combine(workDir, output);
@@ -42,11 +54,6 @@ namespace IMASS.SnthermModel
                     results.Add(dst);
                 }
             }
-            try
-            {
-                Directory.Delete(workDir, recursive: true);
-            }
-            catch { }
 
             return new SnthermRunResult(
                     runId,
@@ -66,15 +73,50 @@ namespace IMASS.SnthermModel
             await src.CopyToAsync(fs, ct);
         }
 
-        private static async Task<(int exitCode, string stdOut, string stdErr)> RunProcessAsync(string dockerWorkDir, TimeSpan timeout, CancellationToken ct)
+        private static async Task<(int exitCode, string stdOut, string stdErr)> RunProcessAsync(
+            string workDir,
+            TimeSpan timeout,
+            CancellationToken ct,
+            string dockerImage,
+            string volumeName,
+            string runsRoot)
         {
             var client = new DockerClientConfiguration().CreateClient();
+
+            var imageParts = (dockerImage ?? string.Empty).Split(':', 2);
+            var imageName = imageParts[0];
+            var imageTag = imageParts.Length > 1 ? imageParts[1] : "latest";
+            var fullImage = string.IsNullOrWhiteSpace(imageTag) ? imageName : $"{imageName}:{imageTag}";
+
+            // Decide how to share files with the job container:
+            // - Local host run: bind-mount the runsRoot path so outputs land on disk.
+            // - In-container run (compose backend): use the named volume so it matches the backend's mount.
+            var inContainer = string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase);
+            var mounts = new List<Mount>();
+            if (!inContainer && Directory.Exists(workDir))
+            {
+                mounts.Add(new Mount
+                {
+                    Type = "bind",
+                    Source = workDir,
+                    Target = "/work"
+                });
+            }
+            else
+            {
+                mounts.Add(new Mount
+                {
+                    Type = "volume",
+                    Source = string.IsNullOrWhiteSpace(volumeName) ? "sntherm-runs" : volumeName,
+                    Target = "/work"
+                });
+            }
 
             await client.Images.CreateImageAsync(
                 new ImagesCreateParameters
                 {
-                    FromImage = "ethancxyz/sntherm-job",
-                    Tag = "1.0.0"
+                    FromImage = imageName,
+                    Tag = imageTag
                 },
                 authConfig: null,
                 new Progress<JSONMessage>(m =>
@@ -84,11 +126,11 @@ namespace IMASS.SnthermModel
 
             var createContainer = await client.Containers.CreateContainerAsync(new CreateContainerParameters()
             {
-                Image = "ethancxyz/sntherm-job:1.0.0",
+                Image = fullImage,
                 Name = "sntherm-job",
                 HostConfig = new HostConfig()
                 {
-                    Binds = new List<string> { $"{dockerWorkDir}:/work" },
+                    Mounts = mounts,
                     DNS = new[] { "8.8.8.8", "8.8.4.4" }
                 },
                 Healthcheck = new HealthConfig()
