@@ -1,6 +1,7 @@
 ﻿using IMASS.Data;
 using IMASS.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IMASS.Controllers
@@ -25,7 +26,7 @@ namespace IMASS.Controllers
         {
             return _config.GetValue<string>("Sntherm:RunsRoot") ?? Path.Combine(_env.ContentRootPath, "SnthermRuns");
         }
-        public sealed class RunSnthermForm
+        public sealed class RunModelForm
         {
             [FromForm(Name = "model_name")] public string? ModelName { get; set; }
             [FromForm(Name = "scenario_name")] public string? ScenarioName { get; set; }
@@ -35,17 +36,17 @@ namespace IMASS.Controllers
 
         [HttpPost("run")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> RunSntherm([FromForm] RunSnthermForm form, CancellationToken ct)
+        public async Task<IActionResult> RunSntherm([FromForm] RunModelForm form, CancellationToken ct)
         {
-            if (form.inputFile1 is null || form.inputFile2 is null)
+            if (form.inputFile1 is null)
             {
                 return BadRequest("Missing required files");
             }
             await using var s1 = form.inputFile1.OpenReadStream();
-            await using var s2 = form.inputFile2.OpenReadStream();
+            await using var s2 = form.inputFile2?.OpenReadStream();
 
 
-            var (scenario, chain, job, run) = await _builder.RunModelAsync(
+            var (scenario, chain, job, result) = await _builder.RunModelAsync(
                 form.ModelName,
                 form.ScenarioName,
                 s1,
@@ -54,19 +55,41 @@ namespace IMASS.Controllers
                 ct
                 );
 
-            return Ok(new
+            if (result.Sntherm != null)
             {
-                ScenarioId = scenario.Id,
-                ChainId = chain.Id,
-                JobId = job.JobId,
-                run.runId,
-                run.exitCode,
-                run.StandardOutput,
-                run.StandardError,
-                run.WorkDir,
-                run.ResultsDir,
-                Outputs = run.Outputs.Select(Path.GetFileName).ToArray()
-            });
+                var sn = result.Sntherm;
+
+                return Ok(new
+                {
+                    Model = "sntherm",
+                    ScenarioId = scenario.Id,
+                    ChainId = chain.Id,
+                    JobId = job.JobId,
+                    sn.runId,
+                    sn.exitCode,
+                    sn.StandardOutput,
+                    sn.StandardError,
+                    sn.WorkDir,
+                    sn.ResultsDir,
+                    Outputs = sn.Outputs.Select(Path.GetFileName).ToArray()
+                });
+            }
+            if (result.Fasst != null)
+            {
+                var fst = result.Fasst;
+                return Ok(new
+                {
+                    Model = "fasst",
+                    ScenarioId = scenario.Id,
+                    ChainId = chain.Id,
+                    JobId = job.JobId,
+
+                    fst.Stdout,
+                    fst.Stderr,
+                    Outputs = fst.Outputs.Select(Path.GetFileName).ToArray()
+                });
+            }
+            return BadRequest("No valid model run result");
 
         }
 
@@ -104,39 +127,60 @@ namespace IMASS.Controllers
         [HttpPost("create-job-and-run")]
         public async Task<IActionResult> CreateJobAndRun([FromForm] JobRunForm form, CancellationToken ct)
         {
-            if (form.inputFile1 is null || form.inputFile2 is null)
+            if (form.inputFile1 is null)
             {
                 return BadRequest("Missing required files");
             }
 
             await using var s1 = form.inputFile1.OpenReadStream();
-            await using var s2 = form.inputFile2.OpenReadStream();
+            await using var s2 = form.inputFile2?.OpenReadStream();
 
-
-            var (scenario,chain,job, run) = await _builder.CreateJobAndRunModelAsync(
-                form.ScenarioId.Value,
-                form.ChainId.Value,
+            var (scenario, chain, job, result) = await _builder.CreateJobAndRunModelAsync(
+                form.ScenarioId!.Value,
+                form.ChainId!.Value,
                 form.ModelName,
                 s1,
                 s2,
                 GetRunsRoot(),
                 ct
-                );
+            );
 
-            return Ok(new
+            if (result.Sntherm != null)
             {
-                ScenarioId = scenario.Id,
-                ChainId = chain.Id,
-                JobId = job.JobId,
-                run.runId,
-                run.exitCode,
-                run.StandardOutput,
-                run.StandardError,
-                run.WorkDir,
-                run.ResultsDir,
-                Outputs = run.Outputs.Select(Path.GetFileName).ToArray()
-            });
-        }
+                var sn = result.Sntherm;
 
+                return Ok(new
+                {
+                    Model = "sntherm",
+                    ScenarioId = scenario.Id,
+                    ChainId = chain.Id,
+                    job.JobId,
+                    sn.runId,
+                    sn.exitCode,
+                    sn.StandardOutput,
+                    sn.StandardError,
+                    sn.WorkDir,
+                    sn.ResultsDir,
+                    Outputs = sn.Outputs.Select(Path.GetFileName).ToArray()
+                });
+            }
+            if (result.Fasst != null)
+            {
+                var fst = result.Fasst;
+                return Ok(new
+                {
+                    Model = "fasst",
+                    ScenarioId = scenario.Id,
+                    ChainId = chain.Id,
+                    job.JobId,
+
+                    fst.Stdout,
+                    fst.Stderr,
+                    Outputs = fst.Outputs.Select(Path.GetFileName).ToArray()
+                });
+            }
+
+            return BadRequest("No valid model run result");
+        }
     }
 }
