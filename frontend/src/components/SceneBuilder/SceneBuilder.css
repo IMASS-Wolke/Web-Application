@@ -145,3 +145,56 @@
 .react-flow__attribution {
   display: none !important;
 }
+
+.edge-blink path {
+  stroke: whitesmoke !important;
+  stroke-width: 2;
+}
+
+@keyframes flow {
+  0%   { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.dropdown-input-scene-builder {
+  max-width: 150px;
+  border: 2px dashed var(--color-border);
+  background: var(--color-surface);
+  border-radius: 1.0px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  transition: border-color 0.2s, background-color 0.2s;
+  cursor: pointer;
+  margin-bottom: 2.0px;
+}
+
+.dropdown-input-scene-builder:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.dropdown-input-scene-builder.active {
+  border-color: var(--color-primary);
+  background-color: rgba(74, 144, 226, 0.1);
+  color: var(--color-text);
+  box-shadow: 0 0 10px rgba(58, 124, 165, 0.3);
+}
+
+.dropdown-input-scene-builder label {
+  color: var(--color-text);
+}
+
+.file-name-scene-builder {
+  color: var(--color-success);
+  font-size: 12px;
+}
+
+.input-text-scene-builder {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-left: 5px;
+  margin-right: 5px;
+}

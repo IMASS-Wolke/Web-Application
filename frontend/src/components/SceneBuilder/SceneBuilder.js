@@ -9,7 +9,10 @@ import ReactFlow, {
   Handle,
   Position,
   MarkerType,
+  SmoothStepEdge,
 } from "reactflow";
+
+import { useDropzone } from "react-dropzone";
 
 import JSZip from "jszip";
 
@@ -23,45 +26,105 @@ const InputNode = ({ id, data }) => {
   const mode = data.mode;
   const files = data.files;
 
-  const handleFasstFile = (e) => {
-    const file = e.target.files?.[0];
-    data.onFileSelect(id, { fasstFile: file });
-  };
+  // --- SNTHERM Dropzones ---
+  const onDropTest = useCallback(
+    (accepted) => {
+      const file = accepted?.[0];
+      if (file) data.onFileSelect(id, { ...files, testIn: file });
+    },
+    [files, id, data]
+  );
 
-  const handleSnthermTest = (e) => {
-    const file = e.target.files?.[0];
-    data.onFileSelect(id, { ...files, testIn: file });
-  };
+  const onDropMetSwe = useCallback(
+    (accepted) => {
+      const file = accepted?.[0];
+      if (file) data.onFileSelect(id, { ...files, metSweIn: file });
+    },
+    [files, id, data]
+  );
 
-  const handleSnthermMetSwe = (e) => {
-    const file = e.target.files?.[0];
-    data.onFileSelect(id, { ...files, metSweIn: file });
-  };
+  const {
+    getRootProps: getTestRoot,
+    getInputProps: getTestInput,
+    isDragActive: testActive,
+  } = useDropzone({ onDrop: onDropTest, multiple: false });
+
+  const {
+    getRootProps: getMetRoot,
+    getInputProps: getMetInput,
+    isDragActive: metActive,
+  } = useDropzone({ onDrop: onDropMetSwe, multiple: false });
+
+
+  // --- FASST Dropzone ---
+  const onDropFasst = useCallback(
+    (accepted) => {
+      const file = accepted?.[0];
+      if (file) data.onFileSelect(id, { fasstFile: file });
+    },
+    [id, data]
+  );
+
+  const {
+    getRootProps: getFasstRoot,
+    getInputProps: getFasstInput,
+    isDragActive: fasstActive,
+  } = useDropzone({ onDrop: onDropFasst, multiple: false });
 
   return (
     <div className="scene-node scene-node-io">
       <Handle type="source" position={Position.Right} />
       <div className="scene-node-label">Input ({mode})</div>
 
+      {/* ---------- FASST UPLOAD ---------- */}
       {mode === "FASST" && (
-        <>
-          <input type="file" onChange={handleFasstFile} />
-          {files?.fasstFile && <p>{files.fasstFile.name}</p>}
-        </>
+        <div
+          className={`dropdown-input-scene-builder ${fasstActive ? "active" : ""}`}
+          {...getFasstRoot()}
+        >
+          <input {...getFasstInput()} />
+          {files?.fasstFile ? (
+            <p className="file-name-scene-builder">{files.fasstFile.name}</p>
+          ) : (
+            <p className="input-text-scene-builder">Drag & drop FASST input file</p>
+          )}
+        </div>
       )}
 
+      {/* ---------- SNTHERM UPLOADS ---------- */}
       {mode === "SNTHERM" && (
         <>
-          <input type="file" onChange={handleSnthermTest} />
-          {files?.testIn && <p>{files.testIn.name}</p>}
+          {/* TEST.IN */}
+          <div
+            className={`dropdown-input-scene-builder ${testActive ? "active" : ""}`}
+            {...getTestRoot()}
+          >
+            <input {...getTestInput()} />
+            {files?.testIn ? (
+              <p className="file-name-scene-builder">{files.testIn.name}</p>
+            ) : (
+              <p className="input-text-scene-builder">Drag & drop TEST.IN</p>
+            )}
+          </div>
 
-          <input type="file" onChange={handleSnthermMetSwe} />
-          {files?.metSweIn && <p>{files.metSweIn.name}</p>}
+          {/* METSWE.IN */}
+          <div
+            className={`dropdown-input-scene-builder ${metActive ? "active" : ""}`}
+            {...getMetRoot()}
+          >
+            <input {...getMetInput()} />
+            {files?.metSweIn ? (
+              <p className="file-name-scene-builder">{files.metSweIn.name}</p>
+            ) : (
+              <p className="input-text-scene-builder">Drag & drop METSWE.IN</p>
+            )}
+          </div>
         </>
       )}
     </div>
   );
 };
+
 
 // ---------------------------------------------------------
 // Model Nodes
@@ -97,6 +160,10 @@ const nodeTypes = {
   fasstNode: FasstNode,
   snthermNode: SnthermNode,
   outputNode: OutputNode,
+};
+
+const edgeTypes = {
+  smoothstep: SmoothStepEdge,
 };
 
 // ---------------------------------------------------------
@@ -191,7 +258,16 @@ export default function SceneBuilder() {
 
   const onConnect = useCallback((params) => {
     setEdges((eds) =>
-      addEdge({ ...params, markerEnd: { type: MarkerType.ArrowClosed } }, eds)
+      addEdge(
+        {
+          ...params,
+          type: "smoothstep",
+          markerEnd: { type: MarkerType.ArrowClosed },
+          className: "edge-blink",
+          selectable: true,
+        },
+        eds
+      )
     );
     setTimeout(updateInputMode, 0);
   }, []);
@@ -252,10 +328,10 @@ export default function SceneBuilder() {
     const text = await res.text();
     let json;
     try {
-        json = JSON.parse(text);
+      json = JSON.parse(text);
     } catch {
-        console.error("Invalid JSON from SNTHERM:", text);
-        throw new Error("SNTHERM returned invalid JSON");
+      console.error("Invalid JSON from SNTHERM:", text);
+      throw new Error("SNTHERM returned invalid JSON");
     }
 
     setOutputArea((o) => ({ ...o, sntherm: json }));
@@ -269,22 +345,22 @@ export default function SceneBuilder() {
 
     // --- load ZIP with JSZip ---
     const jszipData = await JSZip.loadAsync(zipBlob);
-    
+
     let brockFile = null;
 
     for (let path in jszipData.files) {
-        if (path.toLowerCase().includes("brock.out")) {
-            const content = await jszipData.files[path].async("blob");
-            brockFile = new File([content], "brock.out");
-        }
+      if (path.toLowerCase().includes("brock.out")) {
+        const content = await jszipData.files[path].async("blob");
+        brockFile = new File([content], "brock.out");
+      }
     }
 
     if (!brockFile) {
-        throw new Error("brock.out not found in ZIP");
+      throw new Error("brock.out not found in ZIP");
     }
 
     return brockFile;
-}
+  }
 
 
 
@@ -313,21 +389,32 @@ export default function SceneBuilder() {
 
     const order = computeExecutionOrder();
 
+    const hasSntherm = nodes.some(n => n.type === "snthermNode");
+    const hasFasst = nodes.some(n => n.type === "fasstNode");
+
     let snthermInput = null;
     let snthermOutputFile = null;
 
     for (const n of order) {
+
+      // INPUT NODE
       if (n.type === "inputNode") {
-        if (n.data.mode === "SNTHERM") {
+        if (n.data.mode === "SNTHERM" && hasSntherm) {
           snthermInput = n.data.files;
+        }
+        if (n.data.mode === "FASST" && !hasSntherm) {
+          // Input goes directly to FASST
+          snthermOutputFile = n.data.files.fasstFile;
         }
       }
 
-      if (n.type === "snthermNode") {
+      // SNTHERM NODE
+      if (n.type === "snthermNode" && hasSntherm) {
         snthermOutputFile = await runSntherm(snthermInput);
       }
 
-      if (n.type === "fasstNode") {
+      // FASST NODE
+      if (n.type === "fasstNode" && hasFasst) {
         await runFasst(snthermOutputFile);
       }
     }
@@ -359,6 +446,7 @@ export default function SceneBuilder() {
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesUpdated}
             onConnect={onConnect}
