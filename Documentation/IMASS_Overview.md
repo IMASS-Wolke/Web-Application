@@ -66,6 +66,8 @@ Frontend:
 ## First-Time Local Setup (local run)
 1) **Clone**: `git clone` then `cd Web-Application`.
 2) **Configure backend**:
+   - Open `backend/backend.sln` in your IDE if you prefer a GUI, set `ConnectionStrings:DefaultConnection` in `backend/appsettings.json` (or the .Development version), then run with `dotnet run` or the IDE’s run profile.
+   - From CLI, keep using steps below.
 3) **Provision database**:  
    `dotnet ef database update --project backend/IMASS.csproj --startup-project backend`
 4) **Run backend** (Docker must be running for SNTHERM):  
