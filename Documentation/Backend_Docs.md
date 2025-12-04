@@ -22,7 +22,8 @@ Backend notes for the team taking over next year. This covers what the API does,
    - `Sntherm:Image`, `Sntherm:RunsRoot` (default `C:\SnthermRuns`)
    - `FasstApi:BaseUrl` and `Fasst:BaseUrl`/`Fasst:HealthPath` for health polling
 2) Apply migrations: `dotnet ef database update --project backend/IMASS.csproj --startup-project backend`
-3) Run: `dotnet run --project backend/IMASS.csproj --urls http://localhost:5103`
+3) Run from CLI: `dotnet run --project backend/IMASS.csproj --urls http://localhost:5103`
+   - Or open `backend/backend.sln` in your IDE, set the connection string in `backend/appsettings.json` (or .Development), and start the project from the IDE.
 4) Verify: open Swagger at `http://localhost:5103/swagger/index.html`
 
 ## Configuration map (appsettings)
@@ -84,4 +85,3 @@ Backend notes for the team taking over next year. This covers what the API does,
 ## Background services and messaging
 - `FasstHealthPublisherService` polls `Fasst:BaseUrl` + `Fasst:HealthPath` every 5 seconds and broadcasts a health payload on SignalR hub `/hubs/health`. Frontend health panel listens for `healthUpdate`.
 - Hub is registered in `backend/Program.cs` via `app.MapHub<HealthHub>("/hubs/health")`.
-
