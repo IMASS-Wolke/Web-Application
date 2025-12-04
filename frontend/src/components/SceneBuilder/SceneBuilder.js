@@ -11,10 +11,10 @@ import ReactFlow, {
   MarkerType,
   SmoothStepEdge,
 } from "reactflow";
-
 import { useDropzone } from "react-dropzone";
-
 import JSZip from "jszip";
+
+import gr1ZipFile from "./fasstInputs/gr1_zip.inp";
 
 import "reactflow/dist/style.css";
 import "./SceneBuilder.css";
@@ -384,43 +384,92 @@ export default function SceneBuilder() {
   // -------------------------------------------------------
   // RUN CHAIN (SNTHERM → FASST)
   // -------------------------------------------------------
+  async function runCoupled(snthermOutFile) {
+    // Load local gr1_zip.inp from import
+    const response = await fetch(gr1ZipFile);
+    const buffer = await response.arrayBuffer();
+    const fasstInputFile = new File([buffer], "gr1_zip.inp");
+
+    const form = new FormData();
+    form.append("fasstFile", fasstInputFile);
+    form.append("snthermFile", snthermOutFile);
+
+    const res = await fetch("http://localhost:5103/api/FasstIntegration/run-coupled", {
+      method: "POST",
+      body: form,
+    });
+
+    if (!res.ok) throw new Error("Failed to run coupled FASST");
+
+    const json = await res.json();
+    setOutputArea((o) => ({ ...o, fasst: json }));
+    return json;
+  }
+
+  function isCoupledChain(order) {
+    // Must be exactly: input -> SNTHERM -> FASST -> output
+    if (order.length !== 4) return false;
+
+    const t = order.map(n => n.type);
+
+    return (
+      t[0] === "inputNode" &&
+      t[1] === "snthermNode" &&
+      t[2] === "fasstNode" &&
+      t[3] === "outputNode"
+    );
+  }
+
+
+  // -------------------------------------------------------
+  // RUN CHAIN (SNTHERM → FASST)
+  // -------------------------------------------------------
   const runScene = async () => {
-    setStatus("Running chain...");
+  setStatus("Running chain...");
 
-    const order = computeExecutionOrder();
+  const order = computeExecutionOrder();
+  const coupled = isCoupledChain(order);
 
-    const hasSntherm = nodes.some(n => n.type === "snthermNode");
-    const hasFasst = nodes.some(n => n.type === "fasstNode");
+  let snthermInput = null;
+  let snthermOutputFile = null;
 
-    let snthermInput = null;
-    let snthermOutputFile = null;
-
-    for (const n of order) {
-
-      // INPUT NODE
-      if (n.type === "inputNode") {
-        if (n.data.mode === "SNTHERM" && hasSntherm) {
-          snthermInput = n.data.files;
-        }
-        if (n.data.mode === "FASST" && !hasSntherm) {
-          // Input goes directly to FASST
-          snthermOutputFile = n.data.files.fasstFile;
-        }
-      }
-
-      // SNTHERM NODE
-      if (n.type === "snthermNode" && hasSntherm) {
-        snthermOutputFile = await runSntherm(snthermInput);
-      }
-
-      // FASST NODE
-      if (n.type === "fasstNode" && hasFasst) {
-        await runFasst(snthermOutputFile);
+  // FIRST PASS — gather SNTHERM input
+  for (const n of order) {
+    if (n.type === "inputNode") {
+      if (n.data.mode === "SNTHERM") {
+        snthermInput = n.data.files;
       }
     }
+  }
 
-    setStatus("Completed.");
-  };
+  // RUN SNTHERM if present
+  for (const n of order) {
+    if (n.type === "snthermNode") {
+      if (!snthermInput || !snthermInput.testIn || !snthermInput.metSweIn) {
+        setStatus("Missing SNTHERM input files");
+        return;
+      }
+      snthermOutputFile = await runSntherm(snthermInput);
+    }
+  }
+
+  // COUPLED MODE: SNTHERM -> FASST
+  if (coupled) {
+    await runCoupled(snthermOutputFile);
+    setStatus("Completed (coupled mode).");
+    return;
+  }
+
+  // NORMAL MODE FASST (existing behavior)
+  for (const n of order) {
+    if (n.type === "fasstNode") {
+      await runFasst(snthermOutputFile);
+    }
+  }
+
+  setStatus("Completed.");
+};
+
 
   // -------------------------------------------------------
   // UI
