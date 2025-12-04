@@ -17,6 +17,7 @@ Repo directories:
 - **TokenInfo** stores refresh tokens (`Username`, `RefreshToken`, `ExpiredAt`).
 - **Model** <-> **Job** one-to-many (join table `JobModels`), `Status` tracks run state.
 - **Scenario** -> **Chain** -> **Job** hierarchy (Scenario has many Chains, Chain has many Jobs).
+- **Scenario** is the blueprint, **Chain** is a singular run/instance of a Scenario, **Job** is a singular run/instance of a Model
 - **SnthermRunResult** persists SNTHERM run metadata and output file paths.
 
 ## Backend Overview (port 5103)
