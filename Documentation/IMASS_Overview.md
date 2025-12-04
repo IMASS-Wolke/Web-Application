@@ -110,6 +110,15 @@ Frontend:
 
 ## Hand-off Notes
 
+- Unify naming conventions properly: Bad leftovers like:`/api/SnthermJob/run` and `/api/FasstIntegration/run`
+- **Model** <-> **Job** is a many-to-many still even tough it SHOULD be a one-to-many (1 model -> many Jobs | 1 Job -> only 1 model)
 - Default admin credentials are for development only; rotate or remove for production.
 - Frontend API URLs are hard-coded; centralizing via env vars would be a good follow-up.
 - There's is a branch called "containerized-web-app" that contains the a version of the web-application that is fully containerized and working
+
+## Potential Next things to do
+
+- Implement kubernetes + Terraform (smart job management)
+- Add new model support + automatic integration
+- integrate data visualization/charts for any output type
+- Account Linked Job History, Chain History, Scene blueprints, etc.
