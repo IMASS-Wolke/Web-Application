@@ -150,18 +150,26 @@
   display: none !important;
 }
 
-.edge-blink path {
-  stroke: whitesmoke !important;
-  stroke-width: 2;
+.react-flow__edge-path {
+  stroke: url(#flowGradient);
+  stroke-width: 3px;
 }
 
-@keyframes flow {
-  0% {
-    stroke-dashoffset: 20;
-  }
+/* Apply to all smoothstep edges */
+.react-flow__edge-path {
+  stroke: whitesmoke;
+  stroke-width: 3px;
+  animation: flowPulse 2s linear infinite;
+}
 
-  100% {
+@keyframes flowPulse {
+  0% {
+    stroke-dasharray: 5, 10;
     stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dasharray: 5, 10;
+    stroke-dashoffset: -30;
   }
 }
 
