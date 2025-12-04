@@ -1,0 +1,45 @@
+SingleCellExample_met.out         !met data file
+0 0 2.0 -1            !first time through test; single vs multi (0 = single); gap (days) between files; # lines to print
+-1.0 60.0 1 1 1 5 0   !gwl; vegint; print profile; print fluxes; print snow info; define frozen
+0                     !met id
+fasst.out             !output met and surface info file name
+ground.out            !output of soil temperature, moisture, strength profiles
+fluxes.out            !output of surface fluxes
+veg_temp.out          !output of vegetation temperatures
+snow_info.out         !output of snow information
+10.0 70.0             !surface slope (degrees from horizontal), surface aspect angle (degrees from N, + = clockwise)
+-999.0                !surface roughness length (m)
+0                     !no open water
+0.0 0.0               !initial snow depth (m)
+0.0                   !initial ice thickness (m)
+2                     !type of low vegetation
+0.05
+999.0
+999.0
+10.0
+5                     !type of high vegetation
+13.0 0.96
+6,4.75,1.0,5.0,0.3,0.1,0.225,0.98
+6,3.25,1.0,5.0,0.3,0.1,0.046,0.98
+6,1.10,1.0,3.0,0.2,0.5,0.038,0.98
+1                     !number of soil layers
+-1 1.0                !layer soil type, layer thickness (m) [grsp]
+g2nw
+gr1_soil.inp   !user soil data file
+n
+n
+
+
+2                     !type of low vegetation
+0.05
+999.0
+999.0
+10.0
+5                     !type of high vegetation
+13.0 0.96
+6,4.75,1.0,5.0,0.3,0.1,0.225,0.98
+6,3.25,1.0,5.0,0.3,0.1,0.046,0.98
+6,1.10,1.0,3.0,0.2,0.5,0.038,0.98
+
+g2nw
+gr1_soil.inp   !user soil data file
