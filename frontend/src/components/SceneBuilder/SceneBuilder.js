@@ -425,50 +425,78 @@ export default function SceneBuilder() {
   // RUN CHAIN (SNTHERM → FASST)
   // -------------------------------------------------------
   const runScene = async () => {
-  setStatus("Running chain...");
+    setStatus("Running scene...");
 
-  const order = computeExecutionOrder();
-  const coupled = isCoupledChain(order);
+    const order = computeExecutionOrder();
+    const coupled = isCoupledChain(order);
 
-  let snthermInput = null;
-  let snthermOutputFile = null;
+    let inputNode = null;
+    let snthermInput = null;
+    let snthermOutputFile = null;
 
-  // FIRST PASS — gather SNTHERM input
-  for (const n of order) {
-    if (n.type === "inputNode") {
-      if (n.data.mode === "SNTHERM") {
-        snthermInput = n.data.files;
-      }
-    }
-  }
+    // Identify InputNode
+    inputNode = order.find(n => n.type === "inputNode");
 
-  // RUN SNTHERM if present
-  for (const n of order) {
-    if (n.type === "snthermNode") {
-      if (!snthermInput || !snthermInput.testIn || !snthermInput.metSweIn) {
-        setStatus("Missing SNTHERM input files");
+    // ----------------------------------------------
+    // If we have SNTHERM in graph, SNTHERM input must come from inputNode
+    // ----------------------------------------------
+    if (order.some(n => n.type === "snthermNode")) {
+      snthermInput = inputNode?.data?.files;
+
+      if (!snthermInput?.testIn || !snthermInput?.metSweIn) {
+        setStatus("Missing SNTHERM input files.");
         return;
       }
-      snthermOutputFile = await runSntherm(snthermInput);
     }
-  }
 
-  // COUPLED MODE: SNTHERM -> FASST
-  if (coupled) {
-    await runCoupled(snthermOutputFile);
-    setStatus("Completed (coupled mode).");
-    return;
-  }
-
-  // NORMAL MODE FASST (existing behavior)
-  for (const n of order) {
-    if (n.type === "fasstNode") {
-      await runFasst(snthermOutputFile);
+    // ----------------------------------------------
+    // RUN SNTHERM (if present)
+    // ----------------------------------------------
+    for (const n of order) {
+      if (n.type === "snthermNode") {
+        snthermOutputFile = await runSntherm(snthermInput);
+      }
     }
-  }
 
-  setStatus("Completed.");
-};
+    // ----------------------------------------------
+    // COUPLED MODE (SNTHERM → FASST → Output)
+    // ----------------------------------------------
+    if (coupled) {
+      await runCoupled(snthermOutputFile);
+      setStatus("Completed (Coupled Mode)");
+      return;
+    }
+
+    // ----------------------------------------------
+    // NORMAL FASST MODE (NO SNTHERM)
+    // ----------------------------------------------
+    for (const n of order) {
+      if (n.type === "fasstNode") {
+
+        // CASE A: FASST-ONLY (no SNTHERM in graph)
+        if (!order.some(x => x.type === "snthermNode")) {
+          const fasstFile = inputNode?.data?.files?.fasstFile;
+
+          if (!fasstFile) {
+            setStatus("Missing FASST input file.");
+            return;
+          }
+
+          await runFasst(fasstFile);
+          setStatus("Completed (FASST only)");
+          return;
+        }
+
+        // CASE B: SNTHERM → FASST but NOT coupled (fallback path)
+        else {
+          await runFasst(snthermOutputFile);
+        }
+      }
+    }
+
+    setStatus("Completed (SNTHERM only)");
+  };
+
 
 
   // -------------------------------------------------------
