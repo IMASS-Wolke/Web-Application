@@ -109,6 +109,11 @@ Frontend:
 - **CORS issues**: adjust allowed origins in `Program.cs` or config if you change frontend port.
 - **Google login**: needs valid OAuth client ID/secret and authorized redirect (`/signin-google` on backend port).
 
+## Bugs
+- the naming of some api endpoints are not consistent:`/api/SnthermJob/run` and `/api/FasstIntegration/run`
+- In Scenebuilder, the Input doesnt automatically adapt to the model yet. Left-Click on the connection line to fix the Input field
+- Anything with Accounts and Login is a little weird, because we implemented it at the start, but were told to worry about other things first. all of that needs fixing 
+
 ## Hand-off Notes
 
 - Unify naming conventions properly: Bad leftovers like:`/api/SnthermJob/run` and `/api/FasstIntegration/run`
