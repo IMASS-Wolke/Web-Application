@@ -170,8 +170,8 @@ const edgeTypes = {
 // MAIN SCENE BUILDER
 // ---------------------------------------------------------
 export default function SceneBuilder() {
-  const runApi = "http://localhost:5103/api/ScenarioBuilder/run";
-  const snthermOutputApi = "http://localhost:5103/api/SnthermJob/runs";
+  const runApi = "${process.env.REACT_APP_API_URL}/api/ScenarioBuilder/run";
+  const snthermOutputApi = "${process.env.REACT_APP_API_URL}/api/SnthermJob/runs";
 
   const idRef = useRef(1);
   const nextId = () => `${idRef.current++}`;
@@ -394,7 +394,7 @@ export default function SceneBuilder() {
     form.append("fasstFile", fasstInputFile);
     form.append("snthermFile", snthermOutFile);
 
-    const res = await fetch("http://localhost:5103/api/FasstIntegration/run-coupled", {
+    const res = await fetch("${process.env.REACT_APP_API_URL}/api/FasstIntegration/run-coupled", {
       method: "POST",
       body: form,
     });

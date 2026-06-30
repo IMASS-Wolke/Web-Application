@@ -19,7 +19,7 @@ function Login() {
     console.log("Username:", username, "Password:", password);
 
     try {
-      const response = await fetch("http://localhost:5103/api/Accounts/Login", {
+      const response = await fetch("${process.env.REACT_APP_API_URL}/api/Accounts/Login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

@@ -19,7 +19,7 @@ function Signup() {
         console.log("Signup Attempt:", { name, email, password });
 
         try {
-            const response = await fetch("http://localhost:5103/api/Accounts/signup", {
+            const response = await fetch("${process.env.REACT_APP_API_URL}/api/Accounts/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

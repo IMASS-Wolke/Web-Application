@@ -28,7 +28,7 @@ function FasstRunner() {
   // charts: { [filename]: { data: Array<Record<string,number|string>>, columns: string[] } }
   const [charts, setCharts] = useState({});
 
-  const backendBase = "http://localhost:5103/api/FasstIntegration";
+  const backendBase = "${process.env.REACT_APP_API_URL}/api/FasstIntegration";
   const targetFiles = useMemo(
     () => ["fasst.out", "ground.out", "fluxes.out", "veg_temp.out", "snow_info.out"],
     []

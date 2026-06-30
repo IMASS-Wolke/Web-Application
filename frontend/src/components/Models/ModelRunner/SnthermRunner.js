@@ -30,7 +30,7 @@ function SnthermRunner() {
         setResult(null);
 
         try {
-            const res = await fetch("http://localhost:5103/api/SnthermJob/run", {
+            const res = await fetch("${process.env.REACT_APP_API_URL}/api/SnthermJob/run", {
                 method: "POST",
                 body: formData,
             });
@@ -45,7 +45,7 @@ function SnthermRunner() {
     const downloadSnthermZip = async () => {
         if (!result?.runId) return;
         const response = await fetch(
-            `http://localhost:5103/api/SnthermJob/runs/${result.runId}/zip`
+            `${process.env.REACT_APP_API_URL}/api/SnthermJob/runs/${result.runId}/zip`
         );
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);

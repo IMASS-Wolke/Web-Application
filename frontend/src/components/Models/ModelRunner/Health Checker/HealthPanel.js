@@ -5,7 +5,7 @@ import * as signalR from "@microsoft/signalr";
 export default function HealthPanel() {
   const [connected, setConnected] = useState(false);
   const [payload, setPayload] = useState(null);
-  const hubUrl = "http://localhost:5103/hubs/health";
+  const hubUrl = "${process.env.REACT_APP_API_URL}/hubs/health";
 
   useEffect(() => {
     const conn = new signalR.HubConnectionBuilder()

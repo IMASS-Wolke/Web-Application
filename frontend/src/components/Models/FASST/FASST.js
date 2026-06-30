@@ -14,7 +14,7 @@ function Fasst() {
             const jobId = 123; // Hardcode ID's until further notice
             const modelId = 321; // Hardcode ID's until further notice
 
-            const response = await fetch("http://localhost:5103/api/Job/${jobId}/models/${modelId}/Fasst", {
+            const response = await fetch("${process.env.REACT_APP_API_URL}/api/Job/${jobId}/models/${modelId}/Fasst", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
